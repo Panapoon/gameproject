@@ -104,3 +104,5 @@ def option_loop():
 
 # เริ่มต้นที่หน้าจอหลัก
 main_menu()
+
+print("hee")
