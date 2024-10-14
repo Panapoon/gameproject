@@ -95,7 +95,7 @@ def option_loop():
         screen.fill(RED)  # เปลี่ยนพื้นหลังเป็นสีน้ำเงิน
 
         # แสดงข้อความในเกม
-        font = pygame.font.Font(sys_font_1, 74)
+        font = pygame.font.Font("Font/Ldfcomicsans-jj7l.ttf", 74)
         text_surface = font.render("Option Running", True, WHITE)
         text_rect = text_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2))
         screen.blit(text_surface, text_rect)
@@ -104,5 +104,3 @@ def option_loop():
 
 # เริ่มต้นที่หน้าจอหลัก
 main_menu()
-
-print("hee")
