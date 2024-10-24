@@ -11,4 +11,5 @@ resume-เพื่อเล่นค่อ
 option-ก็option
 quit-ออกจากplay
 เมื่อเล่นเสดจะไปหน้า summary
+แฮมทำ
 """

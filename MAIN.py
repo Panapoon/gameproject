@@ -6,4 +6,5 @@ import gameplay.py
 import summary.py
 import option.py
 ดู flowchart ใน picture/main.png 
+ปู๊นทำ
 """
