@@ -72,3 +72,5 @@ class sec_Game:
 # เริ่มต้นเกม
 game_instance = sec_Game()
 game_instance.title_screen.show()
+
+'hsdf;hafhldsfhsa'
