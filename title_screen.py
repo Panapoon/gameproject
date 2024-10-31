@@ -80,9 +80,9 @@ class TitleScreen:
             mouse_click = pygame.mouse.get_pressed()
 
             if self.play_button.is_clicked(mouse_pos, mouse_click):
-                self.game.game_loop()
+                return 'select_song'
             if self.options_button.is_clicked(mouse_pos, mouse_click):
-                self.game.option_loop()
+                return 'option'
             if self.exit_button.is_clicked(mouse_pos, mouse_click):
                 pygame.quit()
                 sys.exit()

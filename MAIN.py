@@ -11,6 +11,7 @@ import option.py
 import pygame
 import sys
 from title_screen import *
+from select_song import *
 
 class sec_Game:
     def __init__(self):
@@ -19,9 +20,10 @@ class sec_Game:
         self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT), pygame.FULLSCREEN)
         pygame.display.set_caption('Rhythm Game lnwza007')
         self.title_screen = TitleScreen(self)
+        self.select_song = SelectSong(self)
 
         # ปุ่มกลับ
-        self.back_button = Button("Back", 300, 500, 200, 50, (255, 165, 0))
+        self.back_button = Button("Back", 300, 500, 200, 50, (255, 165, 0), 0)
 
     def game_loop(self):
         while True:
@@ -71,6 +73,18 @@ class sec_Game:
 
 # เริ่มต้นเกม
 game_instance = sec_Game()
-game_instance.title_screen.show()
-
-'hsdf;hafhldsfhsa'
+screen = 'title'
+while True:
+    if screen == 'title':
+        screen = game_instance.title_screen.show()
+    elif screen == 'select_song':
+        screen = game_instance.select_song.show()
+    elif screen == 'gameplay':
+        screen = game_instance.gameplay.show()
+    elif screen == 'summary':
+        screen = game_instance.summary.show()
+    elif screen == 'select_song':
+        screen = game_instance.summary.show()
+    else:
+        pygame.quit()
+        sys.exit()
