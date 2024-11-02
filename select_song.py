@@ -10,43 +10,13 @@ import pygame
 import sys
 from option import *
 from title_screen import *
-
-class Button:
-    def __init__(self, text, x, y, width, height, color, alpha):
-        self.text = text
-        self.rect = pygame.Rect(x, y, width, height)
-        self.color = color
-        self.alpha = alpha
-        self.hover_color = self._adjust_color(color, -50)
-
-    def _adjust_color(self, color, amount):
-        r, g, b = color
-        return (max(0, r + amount), max(0, g + amount), max(0, b + amount))
-
-    def draw(self, screen, mouse_pos):
-        button_surface = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
-        current_color = self.hover_color if self.rect.collidepoint(mouse_pos) else self.color
-        button_surface.fill((*current_color[:3], 200)) 
-        screen.blit(button_surface, self.rect.topleft)
-
-        font = pygame.font.Font(None, 36)
-        text_surface = font.render(self.text, True, (0, 0, 0))  
-        text_rect = text_surface.get_rect(center=self.rect.center)
-        screen.blit(text_surface, text_rect)
-        
-    def is_clicked(self, mouse_pos, mouse_click):
-        return self.rect.collidepoint(mouse_pos) and mouse_click[0]
+import config
     
 class SelectSong:
     def __init__(self, game):
         self.game = game
         self.WIDTH, self.HEIGHT = self.game.WIDTH, self.game.HEIGHT
         self.screen = self.game.screen
-
-        # กำหนดสี
-        self.BLACK = (0, 0, 0)
-        self.WHITE = (255, 255, 255)
-        self.GREEN = (0, 255, 0)
 
         #สร้างเพลง
         self.songLIST = ["Song 1", "Song 2", "Song 3", "Song 4", "Song 5"]
@@ -63,7 +33,7 @@ class SelectSong:
         
         self.current_bg_index = 1
 
-        self.songM_button = Button(self.songLIST[self.current_bg_index], 325, 300, 150, 150, self.WHITE, 175)
+        self.songM_button = config.Button(self.songLIST[self.current_bg_index], 325, 300, 150, 150, self.WHITE, 175)
 
         self.is_clicking_left = False
         self.is_clicking_right = False
@@ -112,7 +82,7 @@ class SelectSong:
 
             #สร้างปุ่มซ้ายและขวา
             if self.current_bg_index > 1:
-                songL_button = Button(self.songLIST[self.current_bg_index-2], 125, 400, 150, 150, self.WHITE, 175)
+                songL_button = config.Button(self.songLIST[self.current_bg_index-2], 125, 400, 150, 150, self.WHITE, 175)
                 songL_button.draw(self.screen, mouse_pos)
                 if songL_button.is_clicked(mouse_pos, mouse_click) and not self.is_clicking_left:
                     self.current_bg_index -= 1
@@ -122,7 +92,7 @@ class SelectSong:
                     self.is_clicking_left = False  # ตั้งค่าเป็น False เมื่อไม่ได้คลิก
 
             if self.current_bg_index < len(self.songLIST):
-                songR_button = Button(self.songLIST[self.current_bg_index],525, 400, 150, 150, self.WHITE, 175)
+                songR_button = config.Button(self.songLIST[self.current_bg_index],525, 400, 150, 150, self.WHITE, 175)
                 songR_button.draw(self.screen, mouse_pos)
                 if songR_button.is_clicked(mouse_pos, mouse_click) and not self.is_clicking_right:
                     self.current_bg_index += 1

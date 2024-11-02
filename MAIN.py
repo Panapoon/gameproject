@@ -21,9 +21,10 @@ class sec_Game:
         pygame.display.set_caption('Rhythm Game lnwza007')
         self.title_screen = TitleScreen(self)
         self.select_song = SelectSong(self)
+        self.option = Options(self)
 
         # ปุ่มกลับ
-        self.back_button = Button("Back", 300, 500, 200, 50, (255, 165, 0), 0)
+        self.back_button = config.Button("Back", 300, 500, 200, 50, (255, 165, 0), 0)
 
     def game_loop(self):
         while True:
@@ -83,8 +84,8 @@ while True:
         screen = game_instance.gameplay.show()
     elif screen == 'summary':
         screen = game_instance.summary.show()
-    elif screen == 'select_song':
-        screen = game_instance.summary.show()
+    elif screen == 'option':
+        screen = game_instance.option.show()
     else:
         pygame.quit()
         sys.exit()
