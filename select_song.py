@@ -19,7 +19,7 @@ class SelectSong:
         self.screen = self.game.screen
 
         #สร้างเพลง
-        self.songLIST = ["Song 1", "Song 2", "Song 3", "Song 4", "Song 5"]
+        self.songLIST = config.songLIST
         self.font = pygame.font.Font("Font/Ldfcomicsans-jj7l.ttf", 45)
 
         # โหลดรูปภาพพื้นหลัง

@@ -10,34 +10,7 @@ import pygame
 """
 import pygame
 import sys
-
-class Button:
-    def __init__(self, text, x, y, width, height, color, border_radius=15):
-        self.text = text
-        self.rect = pygame.Rect(x, y, width, height)
-        self.color = color
-        self.border_radius = border_radius
-        self.hover_color = self._adjust_color(color, -50)
-
-    def _adjust_color(self, color, amount):
-        """ Adjust the brightness of the color """
-        return (
-            max(0, min(255, color[0] + amount)),
-            max(0, min(255, color[1] + amount)),
-            max(0, min(255, color[2] + amount))
-        )
-
-    def draw(self, screen, mouse_pos):
-        current_color = self.hover_color if self.rect.collidepoint(mouse_pos) else self.color
-        pygame.draw.rect(screen, current_color, self.rect, border_radius=self.border_radius)
-        
-        font = pygame.font.Font(None, 36)
-        text_surface = font.render(self.text, True, (255, 255, 255))
-        text_rect = text_surface.get_rect(center=self.rect.center)
-        screen.blit(text_surface, text_rect)
-
-    def is_clicked(self, mouse_pos, mouse_click):
-        return self.rect.collidepoint(mouse_pos) and mouse_click[0]
+import config
 
 class TitleScreen:
     def __init__(self, game):
@@ -56,9 +29,9 @@ class TitleScreen:
         self.font = pygame.font.Font("Font/Ldfcomicsans-jj7l.ttf", 60)
 
         # สร้างปุ่ม
-        self.play_button = Button("Play", 300, 200, 200, 50, self.GREEN)
-        self.options_button = Button("Options", 300, 300, 200, 50, self.BLUE)
-        self.exit_button = Button("Exit", 300, 400, 200, 50, self.RED)
+        self.play_button = config.Button("Play", 300, 200, 200, 50, self.GREEN, 255)
+        self.options_button = config.Button("Options", 300, 300, 200, 50, self.BLUE, 255)
+        self.exit_button = config.Button("Exit", 300, 400, 200, 50, self.RED, 255)
 
     def show(self):
         while True:

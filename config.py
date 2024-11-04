@@ -38,6 +38,12 @@ def load_settings():
     except FileNotFoundError:
         return {"screen_size": "800x600"} 
     
+#รับชื่อเพลง
+song = "songNAME.txt"
+songLIST = []
+with open(song, 'r') as file:
+    songLIST = [line.strip() for line in file] 
+    
 class Button:
     def __init__(self, text, x, y, width, height, color, alpha):
         self.text = text
@@ -50,16 +56,37 @@ class Button:
         r, g, b = color
         return (max(0, r + amount), max(0, g + amount), max(0, b + amount))
 
+    def wrap_text(self, text, font, max_width):
+        words = text.split(" ")
+        lines = []
+        current_line = words[0]
+
+        for word in words[1:]:
+            test_line = f"{current_line} {word}"
+            if font.size(test_line)[0] <= max_width:
+                current_line = test_line
+            else:
+                lines.append(current_line)
+                current_line = word
+        lines.append(current_line)
+        return lines
+    
     def draw(self, screen, mouse_pos):
         button_surface = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
         current_color = self.hover_color if self.rect.collidepoint(mouse_pos) else self.color
-        button_surface.fill((*current_color[:3], 200)) 
+        button_surface.fill((*current_color[:3], self.alpha)) 
         screen.blit(button_surface, self.rect.topleft)
 
         font = pygame.font.Font(None, 36)
-        text_surface = font.render(self.text, True, (0, 0, 0))  
-        text_rect = text_surface.get_rect(center=self.rect.center)
-        screen.blit(text_surface, text_rect)
+        wrapped_text = self.wrap_text(self.text, font, self.rect.width - 10)
+
+        text_y = self.rect.top + (self.rect.height - (len(wrapped_text) * font.get_linesize())) // 2
+
+        for line in wrapped_text:
+            text_surface = font.render(line, True, (0, 0, 0))  
+            text_rect = text_surface.get_rect(center=(self.rect.centerx, text_y + font.get_linesize() // 2))
+            screen.blit(text_surface, text_rect)
+            text_y += font.get_linesize()
         
     def is_clicked(self, mouse_pos, mouse_click):
         return self.rect.collidepoint(mouse_pos) and mouse_click[0]

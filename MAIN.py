@@ -12,6 +12,7 @@ import pygame
 import sys
 from title_screen import *
 from select_song import *
+import config
 
 class sec_Game:
     def __init__(self):
