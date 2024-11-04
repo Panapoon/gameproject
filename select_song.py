@@ -33,7 +33,7 @@ class SelectSong:
         
         self.current_bg_index = 1
 
-        self.songM_button = config.Button(self.songLIST[self.current_bg_index], 325, 300, 150, 150, self.WHITE, 175)
+        self.songM_button = config.Button(self.songLIST[self.current_bg_index], 325, 300, 150, 150, config.WHITE, 175)
 
         self.is_clicking_left = False
         self.is_clicking_right = False
@@ -82,7 +82,7 @@ class SelectSong:
 
             #สร้างปุ่มซ้ายและขวา
             if self.current_bg_index > 1:
-                songL_button = config.Button(self.songLIST[self.current_bg_index-2], 125, 400, 150, 150, self.WHITE, 175)
+                songL_button = config.Button(self.songLIST[self.current_bg_index-2], 125, 400, 150, 150, config.WHITE, 175)
                 songL_button.draw(self.screen, mouse_pos)
                 if songL_button.is_clicked(mouse_pos, mouse_click) and not self.is_clicking_left:
                     self.current_bg_index -= 1
@@ -92,7 +92,7 @@ class SelectSong:
                     self.is_clicking_left = False  # ตั้งค่าเป็น False เมื่อไม่ได้คลิก
 
             if self.current_bg_index < len(self.songLIST):
-                songR_button = config.Button(self.songLIST[self.current_bg_index],525, 400, 150, 150, self.WHITE, 175)
+                songR_button = config.Button(self.songLIST[self.current_bg_index],525, 400, 150, 150, config.WHITE, 175)
                 songR_button.draw(self.screen, mouse_pos)
                 if songR_button.is_clicked(mouse_pos, mouse_click) and not self.is_clicking_right:
                     self.current_bg_index += 1
@@ -110,7 +110,7 @@ class SelectSong:
 
 
             #แสดงข้อความ Press Enter to start
-            spb_surface = self.font.render("Press Spacebar to start", True, self.WHITE)
+            spb_surface = self.font.render("Press Spacebar to start", True, config.WHITE)
             spb_rect = spb_surface.get_rect(center=(self.WIDTH // 2, 75))
             self.screen.blit(spb_surface, spb_rect)
 
