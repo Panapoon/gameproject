@@ -25,68 +25,49 @@ class sec_Game:
         self.option = Options(self)
 
         # ปุ่มกลับ
-        self.back_button = config.Button("Back", 300, 500, 200, 50, (255, 165, 0), 0)
+        self.back_button = config.Button("Back", 27, 300, 500, 200, 50, (255, 165, 0), 0)
+        
+    def fade(self, fade_out=True, delay=500):
+        fade_surface = pygame.Surface((self.WIDTH, self.HEIGHT))
+        fade_surface.fill(config.BLACK)
 
-    def game_loop(self):
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
+        if fade_out:  # เฟดไปสีดำ
+            for alpha in range(0, 256, 5):
+                fade_surface.set_alpha(alpha)
+                self.screen.blit(fade_surface, (0, 0))
+                pygame.display.flip()
+                pygame.time.delay(10)
 
-            self.screen.fill((0, 0, 0))  # ล้างหน้าจอ
-            text_surface = pygame.font.Font("Font/Ldfcomicsans-jj7l.ttf", 60).render("Press ENTER to start!!!", True, (255, 255, 255))
-            text_rect = text_surface.get_rect(center=(self.WIDTH // 2, self.HEIGHT // 2))
-            self.screen.blit(text_surface, text_rect)
-
-            # วาดปุ่มกลับ
-            self.back_button.draw(self.screen, pygame.mouse.get_pos())
-
-            mouse_pos = pygame.mouse.get_pos()
-            mouse_click = pygame.mouse.get_pressed()
-
-            if self.back_button.is_clicked(mouse_pos, mouse_click):
-                return  # กลับไปยังเมนูหลัก
-
-            pygame.display.flip()
-
-    def option_loop(self):
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-
-            self.screen.fill((255, 0, 0))  # เปลี่ยนพื้นหลังเป็นสีแดง
-            option_surface = pygame.font.Font("Font/Ldfcomicsans-jj7l.ttf", 74).render("Option Running", True, (255, 255, 255))
-            option_rect = option_surface.get_rect(center=(self.WIDTH // 2, self.HEIGHT // 2))
-            self.screen.blit(option_surface, option_rect)
-
-            # วาดปุ่มกลับ
-            self.back_button.draw(self.screen, pygame.mouse.get_pos())
-
-            mouse_pos = pygame.mouse.get_pos()
-            mouse_click = pygame.mouse.get_pressed()
-
-            if self.back_button.is_clicked(mouse_pos, mouse_click):
-                return  # กลับไปยังเมนูหลัก
-
-            pygame.display.flip()
+            pygame.time.delay(delay)  # ค้างอยู่ในหน้าจอสีดำ
+            
+        else:  # เฟดกลับจากสีดำ
+            for alpha in range(255, 0, -5):
+                fade_surface.set_alpha(alpha)
+                self.screen.blit(fade_surface, (0, 0))
+                pygame.display.flip()
+                pygame.time.delay(10)
 
 # เริ่มต้นเกม
 game_instance = sec_Game()
 screen = 'title'
+next_screen = None 
 while True:
     if screen == 'title':
-        screen = game_instance.title_screen.show()
+        next_screen = game_instance.title_screen.show()
     elif screen == 'select_song':
-        screen = game_instance.select_song.show()
+        next_screen = game_instance.select_song.show()
     elif screen == 'gameplay':
-        screen = game_instance.gameplay.show()
+        next_screen = game_instance.gameplay.show()
     elif screen == 'summary':
-        screen = game_instance.summary.show()
+        next_screen = game_instance.summary.show()
     elif screen == 'option':
-        screen = game_instance.option.show()
+        next_screen = game_instance.option.show()
     else:
         pygame.quit()
         sys.exit()
+
+    if next_screen and next_screen != screen:
+        game_instance.fade(fade_out=True)  # เฟดไปสีดำ
+        screen = next_screen  # เปลี่ยนหน้าจอ
+        next_screen = None  # รีเซ็ตตัวแปรหน้าจอถัดไป
+        game_instance.fade(fade_out=False)  # เฟดกลับจากสีดำ

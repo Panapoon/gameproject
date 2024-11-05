@@ -44,9 +44,11 @@ songLIST = []
 with open(song, 'r') as file:
     songLIST = [line.strip() for line in file] 
     
+#คลาสปุ่ม
 class Button:
-    def __init__(self, text, x, y, width, height, color, alpha):
+    def __init__(self, text, text_size, x, y, width, height, color, alpha):
         self.text = text
+        self.text_size = text_size
         self.rect = pygame.Rect(x, y, width, height)
         self.color = color
         self.alpha = alpha
@@ -77,7 +79,7 @@ class Button:
         button_surface.fill((*current_color[:3], self.alpha)) 
         screen.blit(button_surface, self.rect.topleft)
 
-        font = pygame.font.Font(None, 36)
+        font = pygame.font.Font(None, self.text_size)
         wrapped_text = self.wrap_text(self.text, font, self.rect.width - 10)
 
         text_y = self.rect.top + (self.rect.height - (len(wrapped_text) * font.get_linesize())) // 2

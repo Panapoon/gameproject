@@ -17,9 +17,9 @@ class Options:
         self.BG = config.menuBG
         self.font = pygame.font.Font(config.FONT1, 60)
 
-        self.left_button = config.Button("<<", 200, 300, 50, 50, config.BLACK, 0)
-        self.right_button = config.Button(">>", 400, 300, 50, 50, config.BLACK, 0)
-        self.apply_button = config.Button("APPLY", 350, 400, 50, 50, config.BLACK, 0)
+        self.left_button = config.Button("<<", 27, 200, 300, 50, 50, config.BLACK, 0)
+        self.right_button = config.Button(">>", 27, 400, 300, 50, 50, config.BLACK, 0)
+        self.apply_button = config.Button("APPLY", 27, 350, 400, 50, 50, config.BLACK, 0)
 
     def show(self):
         popup_size = False

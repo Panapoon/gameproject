@@ -29,9 +29,9 @@ class TitleScreen:
         self.font = pygame.font.Font("Font/Ldfcomicsans-jj7l.ttf", 60)
 
         # สร้างปุ่ม
-        self.play_button = config.Button("Play", 300, 200, 200, 50, self.GREEN, 255)
-        self.options_button = config.Button("Options", 300, 300, 200, 50, self.BLUE, 255)
-        self.exit_button = config.Button("Exit", 300, 400, 200, 50, self.RED, 255)
+        self.play_button = config.Button("Play", 36, 300, 200, 200, 50, self.GREEN, 255)
+        self.options_button = config.Button("Options", 36, 300, 300, 200, 50, self.BLUE, 255)
+        self.exit_button = config.Button("Exit", 36, 300, 400, 200, 50, self.RED, 255)
 
     def show(self):
         while True:
