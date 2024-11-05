@@ -28,7 +28,7 @@ class TitleScreen:
         self.menuBG = pygame.image.load("picture/menuBG.png")
         self.font = pygame.font.Font("Font/Ldfcomicsans-jj7l.ttf", 60)
 
-        # สร้างปุ่ม
+        # สร้างปุ่มโดยใช้คลาส Button
         self.play_button = config.Button("Play", 36, 300, 200, 200, 50, self.GREEN, 255)
         self.options_button = config.Button("Options", 36, 300, 300, 200, 50, self.BLUE, 255)
         self.exit_button = config.Button("Exit", 36, 300, 400, 200, 50, self.RED, 255)
@@ -42,6 +42,8 @@ class TitleScreen:
 
             self.screen.blit(self.menuBG, (0, 0))
             mouse_pos = pygame.mouse.get_pos()
+
+            # วาดปุ่ม
             self.play_button.draw(self.screen, mouse_pos)
             self.options_button.draw(self.screen, mouse_pos)
             self.exit_button.draw(self.screen, mouse_pos)
@@ -52,6 +54,7 @@ class TitleScreen:
 
             mouse_click = pygame.mouse.get_pressed()
 
+            # ตรวจสอบการคลิกปุ่ม
             if self.play_button.is_clicked(mouse_pos, mouse_click):
                 return 'select_song'
             if self.options_button.is_clicked(mouse_pos, mouse_click):

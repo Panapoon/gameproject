@@ -12,6 +12,7 @@ import pygame
 import sys
 from title_screen import *
 from select_song import *
+from option import *
 import config
 
 class sec_Game:
@@ -53,6 +54,7 @@ screen = 'title'
 next_screen = None 
 while True:
     if screen == 'title':
+        pygame.mixer.music.stop()
         next_screen = game_instance.title_screen.show()
     elif screen == 'select_song':
         next_screen = game_instance.select_song.show()
@@ -71,3 +73,4 @@ while True:
         screen = next_screen  # เปลี่ยนหน้าจอ
         next_screen = None  # รีเซ็ตตัวแปรหน้าจอถัดไป
         game_instance.fade(fade_out=False)  # เฟดกลับจากสีดำ
+
