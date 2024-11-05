@@ -32,6 +32,7 @@ class SelectSong:
                 print(f"Error loading image {image_path}: {e}")
         
         self.current_song_index = 1
+        self.is_playing = False
 
         self.songM_button = config.Button(self.songLIST[self.current_song_index], 27, 325, 300, 150, 150, config.WHITE, 175)
 
@@ -40,22 +41,22 @@ class SelectSong:
         self.is_clicking_mid = False
 
     def play_song(self):
-        # Stop current song if playing
+        # หยุดเพลงปัจจุบันถ้ามีการเล่นอยู่
         if self.is_playing:
             pygame.mixer.music.stop()
 
-        # Load and play the selected song
-        song_path = f"songs/SONG{self.current_song_index}.mp3"  # Adjust the path if necessary
+        # โหลดและเล่นเพลงที่เลือก
+        song_path = f"songs/SONG{self.current_song_index}.mp3"  # ปรับเส้นทางถ้าจำเป็น
         try:
             pygame.mixer.music.load(song_path)
-            pygame.mixer.music.play(-1)  # Loop indefinitely
+            pygame.mixer.music.play(-1)  # เล่นซ้ำไปเรื่อย ๆ
             self.is_playing = True
-            print(f"Playing {self.songLIST[self.current_song_index]}")
+            print(f"Playing {self.songLIST[self.current_song_index - 1]}")
         except pygame.error as e:
             print(f"Error playing song {song_path}: {e}")
 
-
     def show(self):
+        self.play_song()
         while True:
             
             mouse_pos = pygame.mouse.get_pos()
@@ -79,18 +80,21 @@ class SelectSong:
                     elif event.key == pygame.K_j and self.current_song_index < len(self.songLIST) :
                         self.current_song_index += 1
                         print(f"Current song index: {self.current_song_index}")
+                        self.play_song()
                 
                 #ควบคุมด้วย scroll wheel
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 4 and self.current_song_index > 1:  # scroll up
                         self.current_song_index -= 1
                         print(f"Current song index: {self.current_song_index}")
+                        self.play_song()
                     elif event.button == 5 and self.current_song_index < len(self.songLIST):  # scroll down
                         self.current_song_index += 1
                         print(f"Current song index: {self.current_song_index}")
+                        self.play_song()
 
             #แสดงพื้นหลัง
-            self.screen.blit(self.background_images[self.current_song_index-1], (0,0))
+            self.screen.blit(self.background_images[self.current_song_index-1], (0,0))            
 
             #สร้างปุ่มตรงกลาง
             self.songM_button.text = self.songLIST[self.current_song_index-1]
@@ -104,6 +108,7 @@ class SelectSong:
                     self.current_song_index -= 1
                     self.is_clicking_left = True  # ตั้งค่าเป็น True เพื่อป้องกันการคลิกซ้ำ
                     print(f"Current song index: {self.current_song_index}")
+                    self.play_song()
                 elif not songL_button.is_clicked(mouse_pos, mouse_click):
                     self.is_clicking_left = False  # ตั้งค่าเป็น False เมื่อไม่ได้คลิก
 
@@ -114,6 +119,7 @@ class SelectSong:
                     self.current_song_index += 1
                     self.is_clicking_right = True  # ตั้งค่าเป็น True เพื่อป้องกันการคลิกซ้ำ
                     print(f"Current song index: {self.current_song_index}")
+                    self.play_song()
                 elif not songR_button.is_clicked(mouse_pos, mouse_click):
                     self.is_clicking_right = False  # ตั้งค่าเป็น False เมื่อไม่ได้คลิก
 
