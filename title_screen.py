@@ -29,9 +29,9 @@ class TitleScreen:
         self.font = pygame.font.Font("Font/Ldfcomicsans-jj7l.ttf", 60)
 
         # สร้างปุ่มโดยใช้คลาส Button
-        self.play_button = config.Button("Play", 36, 300, 200, 200, 50, self.GREEN, 255)
-        self.options_button = config.Button("Options", 36, 300, 300, 200, 50, self.BLUE, 255)
-        self.exit_button = config.Button("Exit", 36, 300, 400, 200, 50, self.RED, 255)
+        self.play_button = config.Button("Play", 72, 960, 460, 600, 120, self.GREEN, 255)
+        self.options_button = config.Button("Options", 72, 960, 640, 600, 120, self.BLUE, 255)
+        self.exit_button = config.Button("Exit", 72, 960, 820, 600, 120, self.RED, 255)
 
     def show(self):
         while True:
@@ -49,7 +49,7 @@ class TitleScreen:
             self.exit_button.draw(self.screen, mouse_pos)
 
             title_surface = self.font.render("Rhythm Game", True, self.WHITE)
-            title_rect = title_surface.get_rect(center=(self.WIDTH // 2, 100))
+            title_rect = title_surface.get_rect(center=(self.WIDTH // 2, self.HEIGHT))
             self.screen.blit(title_surface, title_rect)
 
             mouse_click = pygame.mouse.get_pressed()

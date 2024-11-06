@@ -4,9 +4,10 @@ import os
 
 # ขนาดหน้าจอ
 screen_size = {
-    "800x600": (800, 600),
     "1024x768": (1024, 768),
     "1280x720": (1280, 720),
+    "1366x768": (1366, 768),
+    "1600x900": (1600, 900),
     "1920x1080": (1920, 1080)
 }
 current_size_index = 0
@@ -38,7 +39,7 @@ def load_settings():
         with open("settings.json", "r") as f:
             return json.load(f)
     except FileNotFoundError:
-        return {"screen_size": "800x600"}
+        return {"screen_size": "1280x720"}
 
 # รับชื่อเพลง
 song = "songNAME.txt"
@@ -50,48 +51,61 @@ class Button:
     def __init__(self, text, text_size, x, y, width, height, color, alpha, image_path=None, corner_radius=20):
         self.text = text
         self.text_size = text_size
-        self.rect = pygame.Rect(x, y, width, height)
+        self.base_screen_width, self.base_screen_height = 1920, 1080
+        self.original_x, self.original_y = x, y
+        self.original_width, self.original_height = width, height
         self.color = color
         self.alpha = alpha
-        self.corner_radius = corner_radius  # ขนาดของมุมโค้งมน
+        self.corner_radius = corner_radius
         self.button_image = None
 
-        # พยายามโหลดรูปภาพ Button1.png ถึง Button5.png
-        if image_path:
-            image_path = os.path.join("picture", image_path)
-            if os.path.exists(image_path):
-                try:
-                    self.button_image = pygame.image.load(image_path).convert_alpha()
-                    self.button_image = pygame.transform.scale(self.button_image, (self.rect.width, self.rect.height))
-                except pygame.error as e:
-                    print(f"Error loading image {image_path}: {e}")
-            else:
-                print(f"Image file not found: {image_path}")
-        
-        # หากไม่มีภาพ, ลองโหลด Button1.png ถึง Button5.png
-        if not self.button_image:
-            for i in range(1, 6):  # ลองหาภาพ Button1.png ถึง Button5.png
-                button_image_path = os.path.join("picture", f"Button{i}.png")
-                if os.path.exists(button_image_path):
-                    try:
-                        self.button_image = pygame.image.load(button_image_path).convert_alpha()
-                        self.button_image = pygame.transform.scale(self.button_image, (self.rect.width, self.rect.height))
-                        print(f"Loaded {button_image_path}")
-                        break  # ออกจาก loop เมื่อเจอไฟล์ภาพ
-                    except pygame.error as e:
-                        print(f"Error loading image {button_image_path}: {e}")
+        self.update_size_and_position()
 
-        # หากยังไม่พบภาพ, ใช้ Button_default.png
+        self.load_image(image_path)
+
+    def update_size_and_position(self):
+        """ ปรับขนาดและตำแหน่งของปุ่มตามขนาดหน้าจอ """
+        current_screen_width, current_screen_height = pygame.display.get_surface().get_size()
+        scale_x = current_screen_width / self.base_screen_width
+        scale_y = current_screen_height / self.base_screen_height
+
+        new_width = int(self.original_width * scale_x)
+        new_height = int(self.original_height * scale_y)
+        new_x = int(self.original_x * scale_x)
+        new_y = int(self.original_y * scale_y)
+
+        # สร้าง rect ใหม่โดยกำหนดให้จุดศูนย์กลางเป็น new_x, new_y
+        self.rect = pygame.Rect(0, 0, new_width, new_height)
+        self.rect.center = (new_x, new_y)
+
+        # ปรับขนาดของภาพปุ่มตามสัดส่วนใหม่ (ถ้ามี)
+        if self.button_image:
+            self.button_image = pygame.transform.scale(self.button_image, (self.rect.width, self.rect.height))
+    
+    def load_image(self, image_path): 
+        """ โหลดรูปภาพปุ่มจากไฟล์ """
+        if image_path:
+            self.button_image = self.try_load_image(image_path)
         if not self.button_image:
-            default_image_path = "picture/Button_default.png"
-            if os.path.exists(default_image_path):
-                self.button_image = pygame.image.load(default_image_path).convert_alpha()
-                self.button_image = pygame.transform.scale(self.button_image, (self.rect.width, self.rect.height))
-                print(f"Using default image: {default_image_path}")
-            else:
-                print(f"Error: Default image '{default_image_path}' not found.")
+            for i in range(5):
+                self.button_image = self.try_load_image(f"Button{i+1}.png")
+                if self.button_image:
+                    break
+        if not self.button_image:
+            self.button_image = self.try_load_image("Button_default.png")
+
+    def try_load_image(self,image_name):
+        """ ช่วยโหลดภาพและคืนค่าภาพหรือ None ถ้าโหลดไม่ได้ """
+        image_path = os.path.join("picture", image_name)
+        if os.path.exists(image_path):
+            try:
+                image = pygame.image.load(image_path).convert_alpha()
+            except pygame.error:
+                print(f"Error loading image (image_path)")
+        return None
 
     def _adjust_color(self, color, amount):
+        """ ปรับสีเมื่อเมาส์ชี้ """
         r, g, b = color
         return (max(0, r + amount), max(0, g + amount), max(0, b + amount))
 
@@ -111,31 +125,29 @@ class Button:
         lines.append(current_line)
         return lines
     
-    def _draw_rounded_rect(self, surface, size, radius):
+    def draw_rounded_rect(self, surface, color_with_alpha, size, radius):
         """ วาดสี่เหลี่ยมมุมโค้งมนบน surface """
         rect = pygame.Rect(0, 0, size[0], size[1])
-
         # วาดสี่เหลี่ยมมุมโค้งมนโดยใช้ border_radius
-        pygame.draw.rect(surface, (0, 0, 0), rect, border_radius=radius)
+        pygame.draw.rect(surface, self.color, rect, border_radius=radius)
     
     def draw(self, screen, mouse_pos):
-        # วาดพื้นหลังปุ่ม
-        if self.button_image:
-            screen.blit(self.button_image, self.rect.topleft)
+        """ วาดปุ่มบนหน้าจอ """
+        button_surface = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
+        if self.rect.collidepoint(mouse_pos):
+            use_color = self._adjust_color(self.color, -50)
         else:
-            # ถ้าไม่มีภาพ, วาดปุ่มโดยใช้มุมโค้งมน
-            button_surface = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
-            current_color = self._adjust_color(self.color, -50) if self.rect.collidepoint(mouse_pos) else self.color
-            button_surface.fill((*current_color[:3], self.alpha))  # ใช้สีสำหรับพื้นหลัง
-            # วาดมุมโค้งมน
-            self._draw_rounded_rect(button_surface, (self.rect.width, self.rect.height), self.corner_radius)
-            screen.blit(button_surface, self.rect.topleft)
+            use_color = self.color
+
+        self.draw_rounded_rect(button_surface, use_color + (self.alpha,), (self.rect.width, self.rect.height), self.corner_radius)
+        screen.blit(button_surface, self.rect.topleft)
 
         # วาดข้อความบนปุ่ม
         font = pygame.font.Font(FONT1, self.text_size)
         wrapped_text = self.wrap_text(self.text, font, self.rect.width - 10)
 
-        text_y = self.rect.top + (self.rect.height - (len(wrapped_text) * font.get_linesize())) // 2
+        text_height = len(wrapped_text) * font.get_linesize()
+        text_y = self.rect.top + (self.rect.height - text_height) // 2
 
         for line in wrapped_text:
             text_surface = font.render(line, True, (0, 0, 0))  # วาดข้อความสีดำ
@@ -144,6 +156,7 @@ class Button:
             text_y += font.get_linesize()
 
     def is_clicked(self, mouse_pos, mouse_click):
+        """ ตรวจสอบว่าเกิดการคลิกบนปุ่ม """
         return self.rect.collidepoint(mouse_pos) and mouse_click[0]
 
 

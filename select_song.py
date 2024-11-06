@@ -25,7 +25,7 @@ class SelectSong:
         # โหลดรูปภาพพื้นหลัง
         self.background_images = []
         for i in range(len(self.songLIST)):  # เปลี่ยนเป็นจำนวนภาพที่มีอยู่
-            image_path = f"picture/BG{i+1}.png"
+            image_path = f"picture/BACKGROUND/BG{i+1}.png"
             try:
                 self.background_images.append(pygame.transform.scale(pygame.image.load(image_path), (self.WIDTH, self.HEIGHT)))
             except pygame.error as e:
