@@ -10,7 +10,6 @@ import pygame
 """
 import pygame
 import sys
-import math
 import config
 
 class TitleScreen:
@@ -24,6 +23,7 @@ class TitleScreen:
         self.GREEN = (0, 255, 0)
         self.RED = (255, 0, 0)
         self.BLUE = (0, 0, 255)
+
 
         # โหลดรูปภาพพื้นหลัง
         self.menuBG = pygame.image.load("picture/menuBG.png")
