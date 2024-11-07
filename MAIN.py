@@ -24,9 +24,6 @@ class sec_Game:
         self.title_screen = TitleScreen(self)
         self.select_song = SelectSong(self)
         self.option = Options(self)
-
-        # ปุ่มกลับ
-        self.back_button = config.Button("Back", 27, 300, 500, 200, 50, (255, 165, 0), 0)
         
     def fade(self, fade_out=True, delay=500):
         fade_surface = pygame.Surface((self.WIDTH, self.HEIGHT))
