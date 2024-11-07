@@ -60,9 +60,12 @@ class Button:
         self.button_image = None
 
         self.update_size_and_position()
-
-        self.load_image(image_path)
-
+        
+        if image_path:
+            self.load_image(image_path)
+        else:
+            self.button_image = None
+            
     def update_size_and_position(self):
         """ ปรับขนาดและตำแหน่งของปุ่มตามขนาดหน้าจอ """
         current_screen_width, current_screen_height = pygame.display.get_surface().get_size()
@@ -100,6 +103,7 @@ class Button:
         if os.path.exists(image_path):
             try:
                 image = pygame.image.load(image_path).convert_alpha()
+                return image
             except pygame.error:
                 print(f"Error loading image (image_path)")
         return None
@@ -133,15 +137,27 @@ class Button:
     
     def draw(self, screen, mouse_pos):
         """ วาดปุ่มบนหน้าจอ """
-        button_surface = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
-        if self.rect.collidepoint(mouse_pos):
-            use_color = self._adjust_color(self.color, -50)
+        if self.button_image:
+            if self.button_image.get_size() != (self.rect.width, self.rect.height):
+                self.button_image = pygame.transform.scale(self.button_image, (self.rect.width, self.rect.height))
+            if self.rect.collidepoint(mouse_pos):
+                overlay = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
+                overlay.fill((0, 0, 0, 50))
+                image_surface = self.button_image.copy()
+                image_surface.blit(overlay, (0,0))
+            else:
+                image_surface =self.button_image
+
+            screen.blit(image_surface, self.rect.topleft)
         else:
-            use_color = self.color
-
-        self.draw_rounded_rect(button_surface, use_color + (self.alpha,), (self.rect.width, self.rect.height), self.corner_radius)
-        screen.blit(button_surface, self.rect.topleft)
-
+            button_surface = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
+            if self.rect.collidepoint(mouse_pos):
+                use_color = self._adjust_color(self.color, -50)
+            else:
+                use_color = self.color
+            
+            self.draw_rounded_rect(button_surface, use_color + (self.alpha,), (self.rect.width, self.rect.height), self.corner_radius)
+            screen.blit(button_surface, self.rect.topleft)
         # วาดข้อความบนปุ่ม
         font = pygame.font.Font(FONT1, self.text_size)
         wrapped_text = self.wrap_text(self.text, font, self.rect.width - 10)
@@ -153,8 +169,7 @@ class Button:
             text_surface = font.render(line, True, (0, 0, 0))  # วาดข้อความสีดำ
             text_rect = text_surface.get_rect(center=(self.rect.centerx, text_y + font.get_linesize() // 2))
             screen.blit(text_surface, text_rect)
-            text_y += font.get_linesize()
-
+            text_y += font.get_linesize()       
     def is_clicked(self, mouse_pos, mouse_click):
         """ ตรวจสอบว่าเกิดการคลิกบนปุ่ม """
         return self.rect.collidepoint(mouse_pos) and mouse_click[0]
