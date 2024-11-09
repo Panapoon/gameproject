@@ -18,6 +18,7 @@ WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
 
 # ฟอนต์
 FONT1 = "Font/Ldfcomicsans-jj7l.ttf"
@@ -28,18 +29,48 @@ FONT4 = "Font/Ldfcomicsanslight-6dZo.ttf"
 menuBG = pygame.image.load("picture/menuBG.png")
 Button_default_path = "picture/default_button.png"
 
-# บันทึกการตั้งค่า
+# ฟังก์ชันสำหรับบันทึกการตั้งค่าลงในไฟล์
 def save_settings(settings):
-    with open("settings.json", "w") as f:
-        json.dump(settings, f)
+    try:
+        with open("settings.json", "w") as settings_file:
+            json.dump(settings, settings_file, indent=4)
+            print("Settings saved successfully!")
+    except Exception as e:
+        print(f"Error saving settings: {e}")
 
-# โหลดการตั้งค่า
+# ฟังก์ชันสำหรับโหลดการตั้งค่าจากไฟล์
 def load_settings():
     try:
-        with open("settings.json", "r") as f:
-            return json.load(f)
+        with open("settings.json", "r") as settings_file:
+            settings = json.load(settings_file)
+            print("Settings loaded successfully!")
+            return settings
     except FileNotFoundError:
-        return {"screen_size": "1280x720"}
+        print("No settings file found, using default settings.")
+        return {
+            "screen_size": "1920x1080",  # ค่าพื้นฐานที่คุณต้องการ
+            "volume": 1.0,
+            "note_speed": 1.0,
+            "key_bindings": {
+                "D": pygame.K_d,
+                "F": pygame.K_f,
+                "K": pygame.K_k,
+                "L": pygame.K_l
+            }
+        }
+    except Exception as e:
+        print(f"Error loading settings: {e}")
+        return {
+            "screen_size": "1920x1080",
+            "volume": 1.0,
+            "note_speed": 1.0,
+            "key_bindings": {
+                "D": pygame.K_d,
+                "F": pygame.K_f,
+                "K": pygame.K_k,
+                "L": pygame.K_l
+            }
+        }
 
 # รับชื่อเพลง
 song = "songNAME.txt"
@@ -173,3 +204,5 @@ class Button:
     def is_clicked(self, mouse_pos, mouse_click):
         """ ตรวจสอบว่าเกิดการคลิกบนปุ่ม """
         return self.rect.collidepoint(mouse_pos) and mouse_click[0] == 1
+    
+    

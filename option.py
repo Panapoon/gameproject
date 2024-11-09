@@ -8,7 +8,7 @@ import pygame
 import pygame
 import sys
 import config
-from config import *
+from config import *  # สำหรับการใช้การตั้งค่าต่างๆ
 
 class Options:
     def __init__(self, game):
@@ -32,26 +32,31 @@ class Options:
         self.speed_right_button = config.Button("+", 40, int(self.WIDTH * 0.8), int(self.HEIGHT * 0.5), 100, 80, config.GREEN, 255)
 
         # ปุ่มปรับ Key Blind
-        self.key_blind_button = config.Button("Key Blind", 40, int(self.WIDTH * 0.5), int(self.HEIGHT * 0.7), 300, 80, config.GREEN, 255)
+        self.key_blind_button = config.Button("Key Blind", 40, int(self.WIDTH * 0.5), int(self.HEIGHT * 0.8), 300, 80, config.GREEN, 255)
 
         # ปุ่ม Apply
         self.apply_button = config.Button("APPLY", 40, int(self.WIDTH * 0.75), int(self.HEIGHT * 0.8), 200, 80, config.GREEN, 255)
 
         # ปุ่ม Back
         self.back_button1 = config.Button("BACK", 40, int(self.WIDTH * 0.25), int(self.HEIGHT * 0.8), 200, 80, config.RED, 255)
-        self.back_button2 = config.Button("BACK", 40, int(self.WIDTH * 0.5), int(self.HEIGHT * 0.9), 200, 80, config.RED, 255)
+        self.back_button2 = config.Button("BACK", 40, int(self.WIDTH * 0.25), int(self.HEIGHT * 0.9), 200, 80, config.RED, 255)
 
-        # ค่าเริ่มต้น
-        self.volume = 1.0
-        self.note_speed = 1.0
-        self.key_blind = False
-        self.key_bindings = {  # เก็บ key bindings ของผู้ใช้
+        # ปุ่ม Reset
+        self.reset_button = config.Button("RESET", 40, int(self.WIDTH * 0.5), int(self.HEIGHT * 0.9), 200, 80, config.YELLOW, 255)
+
+        self.screen_size_button = config.Button("Screen Size", 40, int(self.WIDTH * 0.5), int(self.HEIGHT * 0.7), 300, 80, config.GREEN, 255)
+
+        # โหลดการตั้งค่าจากไฟล์
+        settings = config.load_settings()
+        self.volume = settings.get("volume", 1.0)
+        self.note_speed = settings.get("note_speed", 1.0)
+        self.key_bindings = settings.get("key_bindings", {
             "D": pygame.K_d,
             "F": pygame.K_f,
             "K": pygame.K_k,
             "L": pygame.K_l
-        }
-        self.current_resolution = config.load_settings().get("screen_size", "1920x1080")  # ค่าเริ่มต้นเป็น 1920x1080
+        })
+        self.current_resolution = settings.get("screen_size", "1920x1080")  # ค่าเริ่มต้นเป็น 1920x1080
 
     def show(self):
         while True:
@@ -76,11 +81,13 @@ class Options:
             self.speed_right_button.draw(self.screen, mouse_pos)
             self.key_blind_button.draw(self.screen, mouse_pos)
             self.apply_button.draw(self.screen, mouse_pos)
-            self.back_button1.draw(self.screen, mouse_pos) 
+            self.back_button1.draw(self.screen, mouse_pos)
+            self.reset_button.draw(self.screen, mouse_pos)  
+            self.screen_size_button.draw(self.screen, mouse_pos)
 
             # ส่วนหัว
             OPTION_surface = self.font.render("OPTION", True, config.BLACK)
-            OPTION_rect = OPTION_surface.get_rect(center=(self.WIDTH // 2, self.HEIGHT //7))
+            OPTION_rect = OPTION_surface.get_rect(center=(self.WIDTH // 2, self.HEIGHT // 7))
             shadow_surface = self.font.render("OPTION", True, (0, 0, 0))  # สีดำสำหรับเงา
             shadow_rect = shadow_surface.get_rect(center=(self.WIDTH // 2 + 5, self.HEIGHT // 7 + 5))  # เงาจะอยู่ด้านล่างขวาเล็กน้อย
             self.screen.blit(shadow_surface, shadow_rect)
@@ -122,6 +129,11 @@ class Options:
             # ตรวจสอบการคลิกปุ่ม Key Blind
             if self.key_blind_button.is_clicked(mouse_pos, mouse_click):
                 self.key_blind_screen()  # เปิดหน้าต่างปรับ Key Blind
+            
+
+            # ตรวจสอบการคลิกปุ่ม Reset
+            if self.reset_button.is_clicked(mouse_pos, mouse_click):
+                self.reset_settings()  # รีเซ็ตการตั้งค่า
 
             pygame.display.flip()
 
@@ -166,7 +178,7 @@ class Options:
             y_offset = self.HEIGHT // 3
             for action, key in self.key_bindings.items():
                 key_surface = self.font.render(f"{action}: {pygame.key.name(key)}", True, (0, 0, 0))
-                key_rect = key_surface.get_rect(center=(self.WIDTH // 2, y_offset))
+                key_rect = key_surface.get_rect(center=(self.WIDTH // 2, y_offset+50))
 
                 # Draw red border around selected key
                 if selected_key == action:
@@ -203,5 +215,28 @@ class Options:
             "note_speed": self.note_speed,
             "key_bindings": self.key_bindings  # บันทึก key bindings
         }
-        config.save_settings(settings)  # ฟังก์ชันสำหรับบันทึกการตั้งค่า
+
+        # เรียกใช้ฟังก์ชันสำหรับบันทึกการตั้งค่า
+        config.save_settings(settings)
+
+        # ปรับระดับเสียงใน pygame
         pygame.mixer.music.set_volume(self.volume)
+
+        # แสดงข้อความหรือฟีดแบคเมื่อการตั้งค่าถูกบันทึก
+        print("Settings have been applied and saved.")
+
+    def reset_settings(self):
+        # รีเซ็ตการตั้งค่าเป็นค่าดีฟอลต์
+        self.volume = 1.0
+        self.note_speed = 1.0
+        self.key_bindings = {
+            "D": pygame.K_d,
+            "F": pygame.K_f,
+            "K": pygame.K_k,
+            "L": pygame.K_l
+        }
+
+        # อัพเดตการตั้งค่าในไฟล์
+        self.apply_settings()
+        print("Settings have been reset to default.")
+
