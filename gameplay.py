@@ -38,6 +38,8 @@ score = 0
 combo = 0
 hit_notes = 0
 missed_notes = 0
+total_notes = 0
+accuracy = 100.0
 
 # Message display variables
 message = ""
@@ -53,17 +55,21 @@ pygame.mixer.music.load('songs/SONG1.mp3')
 pygame.mixer.music.play()  # Play the song indefinitely
 
 def load_notes(file_name):
+    global total_notes  # Use the global variable to track total notes
     with open(file_name, "r") as f:
         for line in f:
-            lane, spawn_time, note_type = line.strip().split(",")
+            parts = line.strip().split(",")
+            if len(parts) != 2:  # Expecting only lane and spawn_time
+                print(f"Skipping invalid line: {line.strip()}")  # Log the invalid line
+                continue  # Skip to the next line
+            lane, spawn_time = parts
             notes.append({
                 "lane": int(lane),
                 "spawn_time": float(spawn_time),
                 "y_position": 0,
                 "hit": False,
-                "type": note_type  # Store the note type as a string
             })
-
+            total_notes += 1
 
 def draw_chart():
     for i in range(4):
@@ -97,10 +103,20 @@ def register_hit(note, points, hit_message):
     note["hit"] = True
     score += points
     combo += 1
-    hit_notes += 1
+    hit_notes += 1  # Increment hit notes
     notes.remove(note)
     message = hit_message
-    message_display_time = time.time()  # Record when the message was set
+    message_display_time = time.time()
+
+def display_accuracy():
+    if total_notes > 0:  # Avoid division by zero
+        accuracy = (hit_notes / total_notes) * 100
+    else:
+        accuracy = 0
+
+    font = pygame.font.Font(None, 36)
+    accuracy_text = font.render(f"Accuracy: {accuracy:.2f}%", True, WHITE)
+    screen.blit(accuracy_text, (10, 90))
 
 def draw_notes(current_time):
     global combo, missed_notes
@@ -132,7 +148,7 @@ def display_score():
 
 def game_loop():
     running = True
-    load_notes("notes.txt")
+    load_notes("Notes/SONG1.txt")
     start_time = time.time()
 
     while running:
@@ -150,6 +166,7 @@ def game_loop():
         draw_notes(current_time)
         display_message()
         display_score()
+        display_accuracy()
 
         pygame.display.flip()
         clock.tick(60)
