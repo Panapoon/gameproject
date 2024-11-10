@@ -1,19 +1,4 @@
-"""
-import pygame
-import note.py
-พื้นหลังตามเพลงที่เลือก
-สร้างเกมเพลย์คร่าวๆก็แบ่งบล๊อค(ตามเพลงก็แบ่งตามจังหวะโน๊ตหรือครึ่งโน๊ตกุก็ไม่รู้เล่นดนตรีไม่เป็น)โดยในไฟล์ .txt ก็บรรทัดละบล๊อค
-จับจังหวะผู้เล่น หากกดยิ่งใกล้บล๊อคยิ่งได้คะแนนเยอะ(สมมติ 1 บล๊อค = 100 จุดกลาง = 50 ถ้ากด +-5 = PERFECT กด +-30 = GOOD กดดดนที่เหลือ = BAD ถ้ากดไม่โดน = MISS)
-ในไฟล์ note จะมีทั้งกด1ครั้งและกดค้่าง
-score จะแสดงให้ดูขวาบน
-กด ESC เพื่อpauseโดยมีปุ่ม
-resume-เพื่อเล่นค่อ
-option-ก็option
-quit-ออกจากplay
-เมื่อเล่นเสดจะไปหน้า summary
-แฮมทำ
-"""
-import pygame
+import pygame 
 import time
 from pygame import mixer
 
@@ -38,6 +23,8 @@ score = 0
 combo = 0
 hit_notes = 0
 missed_notes = 0
+total_notes = 0
+accuracy = 100.0
 
 # Message display variables
 message = ""
@@ -52,70 +39,87 @@ clock = pygame.time.Clock()
 pygame.mixer.music.load('songs/SONG1.mp3')
 pygame.mixer.music.play()  # Play the song indefinitely
 
+class Note:
+    def __init__(self, lane, spawn_time):
+        self.lane = lane
+        self.spawn_time = spawn_time
+        self.y_position = 0
+        self.hit = False
+
+    def update_position(self, current_time):
+        elapsed = current_time - self.spawn_time
+        self.y_position = elapsed * NOTE_SPEED
+
+    def draw(self):
+        if self.y_position <= HEIGHT:
+            pygame.draw.circle(screen, NOTE_COLOR, (self.lane * LANE_WIDTH + LANE_WIDTH // 2, int(self.y_position)), 20)
+
+    def is_hit(self, keys, offset_tolerance):
+        if self.hit:
+            return False
+        offset = abs(self.y_position - HIT_LINE_Y)
+        key_mapping = [pygame.K_a, pygame.K_s, pygame.K_d, pygame.K_f]
+        if keys[key_mapping[self.lane]] and offset < offset_tolerance:
+            self.hit = True
+            return True
+        return False
+
 def load_notes(file_name):
+    global total_notes
     with open(file_name, "r") as f:
         for line in f:
-            lane, spawn_time, note_type = line.strip().split(",")
-            notes.append({
-                "lane": int(lane),
-                "spawn_time": float(spawn_time),
-                "y_position": 0,
-                "hit": False,
-                "type": note_type  # Store the note type as a string
-            })
+            parts = line.strip().split(",")
+            if len(parts) != 2:
+                print(f"Skipping invalid line: {line.strip()}")
+                continue
+            lane = int(parts[0])
+            spawn_time = float(parts[1])
+            notes.append(Note(lane, spawn_time))
+            total_notes += 1
 
 
 def draw_chart():
     for i in range(4):
         pygame.draw.line(screen, WHITE, (i * LANE_WIDTH, 0), (i * LANE_WIDTH, HEIGHT), 2)
-    pygame.draw.line(screen, WHITE, (0, HIT_LINE_Y), (WIDTH, HIT_LINE_Y), 2)  # Hit line
+    pygame.draw.line(screen, WHITE, (0, HIT_LINE_Y), (WIDTH, HIT_LINE_Y), 2)
 
 def handle_input(keys, current_time):
     global score, combo, hit_notes, message, message_display_time
-
     for note in notes[:]:  
-        if note["hit"]:
-            continue
-
-        offset = abs(note["y_position"] - HIT_LINE_Y)
-
-        if (note["lane"] == 0 and keys[pygame.K_a]) or \
-           (note["lane"] == 1 and keys[pygame.K_s]) or \
-           (note["lane"] == 2 and keys[pygame.K_d]) or \
-           (note["lane"] == 3 and keys[pygame.K_f]):
-
-            if offset < 10:  # Perfect
-                register_hit(note, 500, "Perfect!")
-            elif offset < 20:  # Good
-                register_hit(note, 300, "Good!")
-            elif offset < 30:  # Bad
-                register_hit(note, 100, "Bad!")
+        if note.is_hit(keys, 10):  # Perfect
+            register_hit(note, 500, "Perfect!")
+        elif note.is_hit(keys, 20):  # Good
+            register_hit(note, 300, "Good!")
+        elif note.is_hit(keys, 30):  # Bad
+            register_hit(note, 100, "Bad!")
 
 def register_hit(note, points, hit_message):
     global score, combo, hit_notes, message, message_display_time
-
-    note["hit"] = True
     score += points
     combo += 1
     hit_notes += 1
     notes.remove(note)
     message = hit_message
-    message_display_time = time.time()  # Record when the message was set
+    message_display_time = time.time()
+
+def display_accuracy():
+    if total_notes > 0:
+        accuracy = (hit_notes / total_notes) * 100
+    else:
+        accuracy = 0
+    font = pygame.font.Font(None, 36)
+    accuracy_text = font.render(f"Accuracy: {accuracy:.2f}%", True, WHITE)
+    screen.blit(accuracy_text, (10, 90))
 
 def draw_notes(current_time):
     global combo, missed_notes
-
     for note in notes[:]:
-        elapsed = current_time - note["spawn_time"]
-        note["y_position"] = elapsed * NOTE_SPEED
-
-        if note["y_position"] <= HEIGHT:
-            pygame.draw.circle(screen, NOTE_COLOR, (note["lane"] * LANE_WIDTH + LANE_WIDTH // 2, int(note["y_position"])), 20)
-        else:
-            if not note["hit"]:
-                combo = 0
-                missed_notes += 1
-                notes.remove(note)
+        note.update_position(current_time)
+        note.draw()
+        if note.y_position > HEIGHT and not note.hit:
+            combo = 0
+            missed_notes += 1
+            notes.remove(note)
 
 def display_message():
     if message and (time.time() - message_display_time) < message_duration:
@@ -132,7 +136,7 @@ def display_score():
 
 def game_loop():
     running = True
-    load_notes("notes.txt")
+    load_notes("Notes/SONG1.txt")
     start_time = time.time()
 
     while running:
@@ -150,6 +154,7 @@ def game_loop():
         draw_notes(current_time)
         display_message()
         display_score()
+        display_accuracy()
 
         pygame.display.flip()
         clock.tick(60)
