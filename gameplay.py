@@ -1,4 +1,4 @@
-import pygame 
+import pygame
 import time
 from pygame import mixer
 
@@ -24,7 +24,7 @@ combo = 0
 hit_notes = 0
 missed_notes = 0
 total_notes = 0
-accuracy = 100.0
+accuracy = 100.0  # Accuracy starts at 100%
 
 # Message display variables
 message = ""
@@ -32,7 +32,7 @@ message_display_time = 0
 message_duration = 1.5  # Display time for the message in seconds
 
 # Pygame setup
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
 clock = pygame.time.Clock()
 
 # Load the song
@@ -58,7 +58,7 @@ class Note:
         if self.hit:
             return False
         offset = abs(self.y_position - HIT_LINE_Y)
-        key_mapping = [pygame.K_a, pygame.K_s, pygame.K_d, pygame.K_f]
+        key_mapping = [pygame.K_d, pygame.K_f, pygame.K_j, pygame.K_k]
         if keys[key_mapping[self.lane]] and offset < offset_tolerance:
             self.hit = True
             return True
@@ -77,7 +77,6 @@ def load_notes(file_name):
             notes.append(Note(lane, spawn_time))
             total_notes += 1
 
-
 def draw_chart():
     for i in range(4):
         pygame.draw.line(screen, WHITE, (i * LANE_WIDTH, 0), (i * LANE_WIDTH, HEIGHT), 2)
@@ -85,41 +84,50 @@ def draw_chart():
 
 def handle_input(keys, current_time):
     global score, combo, hit_notes, message, message_display_time
+    hit_tolerances = [10, 20, 30]  # Perfect, Good, Bad
+    hit_messages = ["Perfect!", "Good!", "Bad!"]
+    points = [500, 300, 100]
+
     for note in notes[:]:  
-        if note.is_hit(keys, 10):  # Perfect
-            register_hit(note, 500, "Perfect!")
-        elif note.is_hit(keys, 20):  # Good
-            register_hit(note, 300, "Good!")
-        elif note.is_hit(keys, 30):  # Bad
-            register_hit(note, 100, "Bad!")
+        for i, tolerance in enumerate(hit_tolerances):
+            if note.is_hit(keys, tolerance):  
+                register_hit(note, points[i], hit_messages[i])
+                break
 
 def register_hit(note, points, hit_message):
     global score, combo, hit_notes, message, message_display_time
     score += points
     combo += 1
-    hit_notes += 1
+    hit_notes += 1  # Increment hit notes
     notes.remove(note)
     message = hit_message
     message_display_time = time.time()
 
+def register_miss(note):
+    global missed_notes, message, message_display_time
+    missed_notes += 1  # Increment missed notes
+    notes.remove(note)
+    message = "Missed!"
+    message_display_time = time.time()
+
 def display_accuracy():
+    global accuracy
     if total_notes > 0:
         accuracy = (hit_notes / total_notes) * 100
     else:
-        accuracy = 0
+        accuracy = 100
     font = pygame.font.Font(None, 36)
     accuracy_text = font.render(f"Accuracy: {accuracy:.2f}%", True, WHITE)
     screen.blit(accuracy_text, (10, 90))
 
 def draw_notes(current_time):
-    global combo, missed_notes
+    global combo
     for note in notes[:]:
         note.update_position(current_time)
         note.draw()
         if note.y_position > HEIGHT and not note.hit:
             combo = 0
-            missed_notes += 1
-            notes.remove(note)
+            register_miss(note)  # Register a miss when the note goes off-screen
 
 def display_message():
     if message and (time.time() - message_display_time) < message_duration:
