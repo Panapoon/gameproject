@@ -13,6 +13,7 @@ import sys
 from title_screen import *
 from select_song import *
 from option import *
+from gameplay import *
 import config
 
 class sec_Game:
