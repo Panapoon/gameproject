@@ -75,4 +75,3 @@ while True:
         screen = next_screen  # เปลี่ยนหน้าจอ
         next_screen = None  # รีเซ็ตตัวแปรหน้าจอถัดไป
         game_instance.fade(fade_out=False)  # เฟดกลับจากสีดำ
-

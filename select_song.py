@@ -34,7 +34,7 @@ class SelectSong:
         self.current_song_index = 1
         self.is_playing = False
 
-        self.songM_button = config.Button(self.songLIST[self.current_song_index], 27, 325, 300, 150, 150, config.WHITE, 175)
+        self.songM_button = config.Button(self.songLIST[self.current_song_index], 27, 960, 600, 300, 300, config.WHITE, 200)
 
         self.is_clicking_left = False
         self.is_clicking_right = False
@@ -102,7 +102,7 @@ class SelectSong:
 
             #สร้างปุ่มซ้ายและขวา
             if self.current_song_index > 1:
-                songL_button = config.Button(self.songLIST[self.current_song_index-2], 27, 125, 400, 150, 150, config.WHITE, 175)
+                songL_button = config.Button(self.songLIST[self.current_song_index-2], 27, 550, 750, 300, 300, config.WHITE, 200)
                 songL_button.draw(self.screen, mouse_pos)
                 if songL_button.is_clicked(mouse_pos, mouse_click) and not self.is_clicking_left:
                     self.current_song_index -= 1
@@ -113,7 +113,7 @@ class SelectSong:
                     self.is_clicking_left = False  # ตั้งค่าเป็น False เมื่อไม่ได้คลิก
 
             if self.current_song_index < len(self.songLIST):
-                songR_button = config.Button(self.songLIST[self.current_song_index], 27,525, 400, 150, 150, config.WHITE, 175)
+                songR_button = config.Button(self.songLIST[self.current_song_index], 27, 1370, 750, 300, 300, config.WHITE, 200)
                 songR_button.draw(self.screen, mouse_pos)
                 if songR_button.is_clicked(mouse_pos, mouse_click) and not self.is_clicking_right:
                     self.current_song_index += 1
