@@ -77,7 +77,6 @@ def load_notes(file_name):
             notes.append(Note(lane, spawn_time))
             total_notes += 1
 
-
 def draw_chart():
     for i in range(4):
         pygame.draw.line(screen, WHITE, (i * LANE_WIDTH, 0), (i * LANE_WIDTH, HEIGHT), 2)
