@@ -1,173 +1,139 @@
+"""
 import pygame
-import time
-from pygame import mixer
+รูปแบบขอตามที่ส่งให้นะ 
+แสดง score ที่เคยทำได้จากเพลงนั้นๆ
+ใช้ F J หรือ scroll mouse เพื่อเลื่อนเพลงและใช้ left click หรือ space bar เพื่อเริ่มเพลง
+ใช้ ESC เพื่อกลับไปยังหน้า title
+วีทำ
+"""
+import pygame
+import sys
+from option import *
+from title_screen import *
+import config
+    
+class SelectSong:
+    def __init__(self, game):
+        self.game = game
+        self.WIDTH, self.HEIGHT = self.game.WIDTH, self.game.HEIGHT
+        self.screen = self.game.screen
 
-# Initialize Pygame and the mixer
-pygame.init()
-mixer.init()
+        #สร้างเพลง
+        self.songLIST = config.songLIST
+        self.font = pygame.font.Font("Font/Ldfcomicsans-jj7l.ttf", 45)
 
-# Screen dimensions and constants
-WIDTH, HEIGHT = 800, 600
-LANE_WIDTH = WIDTH // 4
-HIT_LINE_Y = HEIGHT - 50  
-NOTE_SPEED = 300  
+        # โหลดรูปภาพพื้นหลัง
+        self.background_images = []
+        for i in range(len(self.songLIST)):  # เปลี่ยนเป็นจำนวนภาพที่มีอยู่
+            image_path = f"picture/BACKGROUND/BG{i+1}.png"
+            try:
+                self.background_images.append(pygame.transform.scale(pygame.image.load(image_path), (self.WIDTH, self.HEIGHT)))
+            except pygame.error as e:
+                print(f"Error loading image {image_path}: {e}")
+        
+        self.current_song_index = 1
+        self.is_playing = False
 
-# Colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-NOTE_COLOR = (0, 255, 0)
+        self.songM_button = config.Button(self.songLIST[self.current_song_index], 40, 960, 700, 300, 300, config.WHITE, 200)
 
-# Game variables
-notes = []
-score = 0
-combo = 0
-hit_notes = 0
-missed_notes = 0
-total_notes = 0
-accuracy = 100.0  # Accuracy starts at 100%
+        self.is_clicking_left = False
+        self.is_clicking_right = False
+        self.is_clicking_mid = False
 
-# Message display variables
-message = ""
-message_display_time = 0
-message_duration = 1.5  # Display time for the message in seconds
+    def play_song(self):
+        # หยุดเพลงปัจจุบันถ้ามีการเล่นอยู่
+        if self.is_playing:
+            pygame.mixer.music.stop()
 
-# Pygame setup
-screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
-clock = pygame.time.Clock()
+        # โหลดและเล่นเพลงที่เลือก
+        song_path = f"songs/SONG{self.current_song_index}.mp3"  # ปรับเส้นทางถ้าจำเป็น
+        try:
+            pygame.mixer.music.load(song_path)
+            pygame.mixer.music.play(-1)  # เล่นซ้ำไปเรื่อย ๆ
+            self.is_playing = True
+            print(f"Playing {self.songLIST[self.current_song_index - 1]}")
+        except pygame.error as e:
+            print(f"Error playing song {song_path}: {e}")
 
-# Load the song
-pygame.mixer.music.load('songs/SONG1.mp3')
-pygame.mixer.music.play()  # Play the song indefinitely
+    def show(self):
+        self.play_song()
+        while True:
+            
+            mouse_pos = pygame.mouse.get_pos()
+            mouse_click = pygame.mouse.get_pressed()
 
-class Note:
-    def __init__(self, lane, spawn_time):
-        self.lane = lane
-        self.spawn_time = spawn_time
-        self.y_position = 0
-        self.hit = False
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        return "title"
+                    elif event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:
+                        print(f"Starting {self.songLIST[self.current_song_index-1]}")
+                        pass
 
-    def update_position(self, current_time):
-        elapsed = current_time - self.spawn_time
-        self.y_position = elapsed * NOTE_SPEED
+                    # ตรวจสอบการเลื่อนเพลงด้วยปุ่ม F และ J
+                    elif event.key == pygame.K_f and self.current_song_index > 1:
+                        self.current_song_index -= 1
+                        print(f"Current song index: {self.current_song_index}")
+                    elif event.key == pygame.K_j and self.current_song_index < len(self.songLIST) :
+                        self.current_song_index += 1
+                        print(f"Current song index: {self.current_song_index}")
+                        self.play_song()
+                
+                #ควบคุมด้วย scroll wheel
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 4 and self.current_song_index > 1:  # scroll up
+                        self.current_song_index -= 1
+                        print(f"Current song index: {self.current_song_index}")
+                        self.play_song()
+                    elif event.button == 5 and self.current_song_index < len(self.songLIST):  # scroll down
+                        self.current_song_index += 1
+                        print(f"Current song index: {self.current_song_index}")
+                        self.play_song()
 
-    def draw(self):
-        if self.y_position <= HEIGHT:
-            pygame.draw.circle(screen, NOTE_COLOR, (self.lane * LANE_WIDTH + LANE_WIDTH // 2, int(self.y_position)), 20)
+            #แสดงพื้นหลัง
+            self.screen.blit(self.background_images[self.current_song_index-1], (0,0))            
 
-    def is_hit(self, keys, offset_tolerance):
-        if self.hit:
-            return False
-        offset = abs(self.y_position - HIT_LINE_Y)
-        key_mapping = [pygame.K_d, pygame.K_f, pygame.K_j, pygame.K_k]
-        if keys[key_mapping[self.lane]] and offset < offset_tolerance:
-            self.hit = True
-            return True
-        return False
+            #สร้างปุ่มตรงกลาง
+            self.songM_button.text = self.songLIST[self.current_song_index-1]
+            self.songM_button.draw(self.screen, mouse_pos)
 
-def load_notes(file_name):
-    global total_notes
-    with open(file_name, "r") as f:
-        for line in f:
-            parts = line.strip().split(",")
-            if len(parts) != 2:
-                print(f"Skipping invalid line: {line.strip()}")
-                continue
-            lane = int(parts[0])
-            spawn_time = float(parts[1])
-            notes.append(Note(lane, spawn_time))
-            total_notes += 1
+            #สร้างปุ่มซ้ายและขวา
+            if self.current_song_index > 1:
+                songL_button = config.Button(self.songLIST[self.current_song_index-2], 40, 550, 850, 300, 300, config.WHITE, 200)
+                songL_button.draw(self.screen, mouse_pos)
+                if songL_button.is_clicked(mouse_pos, mouse_click) and not self.is_clicking_left:
+                    self.current_song_index -= 1
+                    self.is_clicking_left = True  # ตั้งค่าเป็น True เพื่อป้องกันการคลิกซ้ำ
+                    print(f"Current song index: {self.current_song_index}")
+                    self.play_song()
+                elif not songL_button.is_clicked(mouse_pos, mouse_click):
+                    self.is_clicking_left = False  # ตั้งค่าเป็น False เมื่อไม่ได้คลิก
 
-def draw_chart():
-    for i in range(4):
-        pygame.draw.line(screen, WHITE, (i * LANE_WIDTH, 0), (i * LANE_WIDTH, HEIGHT), 2)
-    pygame.draw.line(screen, WHITE, (0, HIT_LINE_Y), (WIDTH, HIT_LINE_Y), 2)
+            if self.current_song_index < len(self.songLIST):
+                songR_button = config.Button(self.songLIST[self.current_song_index], 40, 1370, 850, 300, 300, config.WHITE, 200)
+                songR_button.draw(self.screen, mouse_pos)
+                if songR_button.is_clicked(mouse_pos, mouse_click) and not self.is_clicking_right:
+                    self.current_song_index += 1
+                    self.is_clicking_right = True  # ตั้งค่าเป็น True เพื่อป้องกันการคลิกซ้ำ
+                    print(f"Current song index: {self.current_song_index}")
+                    self.play_song()
+                elif not songR_button.is_clicked(mouse_pos, mouse_click):
+                    self.is_clicking_right = False  # ตั้งค่าเป็น False เมื่อไม่ได้คลิก
 
-def handle_input(keys, current_time):
-    global score, combo, hit_notes, message, message_display_time
-    hit_tolerances = [10, 20, 30]  # Perfect, Good, Bad
-    hit_messages = ["Perfect!", "Good!", "Bad!"]
-    points = [500, 300, 100]
+            if self.songM_button.is_clicked(mouse_pos, mouse_click) and not self.is_clicking_mid:
+                pass
+                self.is_clicking_mid = True  # ตั้งค่าเป็น False เมื่อไม่ได้คลิก
+                print(f"Starting {self.songLIST[self.current_song_index-1]}")
+            elif not self.songM_button.is_clicked(mouse_pos, mouse_click):
+                self.is_clicking_mid = False  # ตั้งค่าเป็น False เมื่อไม่ได้คลิก
 
-    for note in notes[:]:  
-        for i, tolerance in enumerate(hit_tolerances):
-            if note.is_hit(keys, tolerance):  
-                register_hit(note, points[i], hit_messages[i])
-                break
 
-def register_hit(note, points, hit_message):
-    global score, combo, hit_notes, message, message_display_time
-    score += points
-    combo += 1
-    hit_notes += 1  # Increment hit notes
-    notes.remove(note)
-    message = hit_message
-    message_display_time = time.time()
+            #แสดงข้อความ Press Enter to start
+            spb_surface = self.font.render("Press Spacebar to start", True, config.WHITE)
+            spb_rect = spb_surface.get_rect(center=(self.WIDTH // 2, 75))
+            self.screen.blit(spb_surface, spb_rect)
 
-def register_miss(note):
-    global missed_notes, message, message_display_time
-    missed_notes += 1  # Increment missed notes
-    notes.remove(note)
-    message = "Missed!"
-    message_display_time = time.time()
-
-def display_accuracy():
-    global accuracy
-    if total_notes > 0:
-        accuracy = (hit_notes / total_notes) * 100
-    else:
-        accuracy = 100
-    font = pygame.font.Font(None, 36)
-    accuracy_text = font.render(f"Accuracy: {accuracy:.2f}%", True, WHITE)
-    screen.blit(accuracy_text, (10, 90))
-
-def draw_notes(current_time):
-    global combo
-    for note in notes[:]:
-        note.update_position(current_time)
-        note.draw()
-        if note.y_position > HEIGHT and not note.hit:
-            combo = 0
-            register_miss(note)  # Register a miss when the note goes off-screen
-
-def display_message():
-    if message and (time.time() - message_display_time) < message_duration:
-        font = pygame.font.Font(None, 36)
-        text = font.render(message, True, WHITE)
-        screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - text.get_height() // 2))
-
-def display_score():
-    font = pygame.font.Font(None, 36)
-    score_text = font.render(f"Score: {score}", True, WHITE)
-    combo_text = font.render(f"Combo: {combo}", True, WHITE)
-    screen.blit(score_text, (10, 10))
-    screen.blit(combo_text, (10, 50))
-
-def game_loop():
-    running = True
-    load_notes("Notes/SONG1.txt")
-    start_time = time.time()
-
-    while running:
-        current_time = time.time() - start_time
-        screen.fill(BLACK)
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-
-        keys = pygame.key.get_pressed()
-        handle_input(keys, current_time)
-
-        draw_chart()
-        draw_notes(current_time)
-        display_message()
-        display_score()
-        display_accuracy()
-
-        pygame.display.flip()
-        clock.tick(60)
-
-    pygame.quit()
-
-if __name__ == "__main__":
-    game_loop()
+            pygame.display.flip()
