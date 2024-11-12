@@ -65,10 +65,10 @@ class Note:
         if self.hit:
             return False
         offset = abs(self.y_position - HIT_LINE_Y)
-        key_mapping = [pygame.K_d, pygame.K_f, pygame.K_j, pygame.K_k]
+        key_mapping = [pygame.K_a, pygame.K_s, pygame.K_j, pygame.K_k]
         
         # เพิ่มระยะเบี่ยงเบนในการตีให้กว้างขึ้น
-        tolerance_increase = 10  # เพิ่มระยะเบี่ยงเบนอีก 10
+        tolerance_increase = 10  # เพิ่ม ระยะเบี่ยงเบนอีก 10
         if keys[key_mapping[self.lane]] and offset < (offset_tolerance + tolerance_increase):
             self.hit = True
             return True
@@ -90,7 +90,10 @@ class Game:
         self.running = True  # สถานะการทำงานของเกม
         self.start_time = time.time()  # เวลาที่เริ่มเกม
         self.paused = False  # สถานะเกมหยุดชั่วคราว
-       
+        self.perfect_hits = 0  # จำนวนโน้ตที่ตี "Perfect!"
+        self.good_hits = 0  # จำนวนโน้ตที่ตี "Good!"
+        self.bad_hits = 0  # จำนวนโน้ตที่ตี "Bad!"
+
     def load_notes(self, file_name):
         """โหลดโน้ตจากไฟล์"""
         global total_notes
@@ -105,12 +108,13 @@ class Game:
                 self.notes.append(Note(lane, spawn_time))  # เพิ่มโน้ตใหม่ในรายการ
                 self.total_notes += 1
 
-<<<<<<< HEAD
-def draw_chart():
-    for i in range(4):
-        pygame.draw.line(screen, WHITE, (i * LANE_WIDTH, 0), (i * LANE_WIDTH, HEIGHT), 2)
-    pygame.draw.line(screen, WHITE, (0, HIT_LINE_Y), (WIDTH, HIT_LINE_Y), 2)
-=======
+    def draw_chart(self):
+        """วาดเส้นที่ใช้แบ่งเลนสำหรับการเล่นเกม"""
+        for i in range(5):  # Draw 5 lines
+            pygame.draw.line(screen, WHITE, (i * LANE_WIDTH, 0), (i * LANE_WIDTH, HEIGHT), 2)
+        pygame.draw.line(screen, WHITE, (WIDTH, 0), (WIDTH, HEIGHT), 2)
+        pygame.draw.line(screen, WHITE, (0, HIT_LINE_Y), (WIDTH, HIT_LINE_Y), 2)  # Draw the HIT_LINE_Y
+
     def handle_input(self, keys, current_time):
         """จัดการกับการกดปุ่มและตรวจสอบการตีโน้ต"""
         hit_tolerances = [10, 20, 30]  # ความเบี่ยงเบนสำหรับการตี Perfect, Good, Bad
@@ -119,7 +123,6 @@ def draw_chart():
 
         if self.paused:  # ถ้าเกมหยุดชั่วคราว
             return
->>>>>>> c6602b6331963b509ecffe321830e292f12f5665
 
         for note in self.notes[:]:  # ลูปผ่านโน้ตทั้งหมด
             for i, tolerance in enumerate(hit_tolerances):  # ตรวจสอบแต่ละระดับของการตีโน้ต
@@ -141,23 +144,18 @@ def draw_chart():
         self.missed_notes += 1  # เพิ่มจำนวนโน้ตที่พลาด
         self.notes.remove(note)  # ลบโน้ตที่พลาดออกจากรายการ
         self.message = "Missed!"  # แสดงข้อความ "Missed!"
-        self.message_display_time = time.time()  # ตั้งเวลาแสดงข้อความ
+        self.message_display_time = time.time()  # ตั้งเวลาแสดงข้อความ 
 
     def display_accuracy(self):
-        """คำนวณและแสดงความแม่นยำ"""
-        if self.total_notes > 0:
-            self.accuracy = (self.hit_notes / self.total_notes) * 100  # คำนวณความแม่นยำ
-        else:
-            self.accuracy = 100  # ถ้าไม่มีโน้ตเลย กำหนดความแม่นยำเป็น 100
+        total_notes = self.total_notes  # จำนวนโน้ตทั้งหมด
+        if total_notes > 0:
+            total_hits = (0 * self.perfect_hits) + (2 * self.good_hits) + (4 * self.bad_hits) + (5 * self.missed_notes) # คะแนนรวมจากการตีโน้ต
+            self.accuracy = (5 * total_notes - total_hits) / (5 * total_notes) * 100  # คำนวณความแม่นยำเป็นเปอร์เซ็นต์
+
+        # แสดงผลความแม่นยำบนหน้าจอ
         font = pygame.font.Font(None, 36)
         accuracy_text = font.render(f"Accuracy: {self.accuracy:.2f}%", True, WHITE)
-        screen.blit(accuracy_text, (10, 90))  # แสดงความแม่นยำบนหน้าจอ
-
-    def draw_chart(self):
-        """วาดเส้นที่ใช้แบ่งเลนสำหรับการเล่นเกม"""
-        for i in range(4):
-            pygame.draw.line(screen, WHITE, (i * LANE_WIDTH, 0), (i * LANE_WIDTH, HEIGHT), 2)
-        pygame.draw.line(screen, WHITE, (0, HIT_LINE_Y), (WIDTH, HIT_LINE_Y), 2)  # วาดเส้น HIT_LINE_Y
+        screen.blit(accuracy_text, (10, 90))  # แสดงที่มุมซ้ายบน
 
     def draw_notes(self, current_time):
         """วาดโน้ตทั้งหมดและอัปเดตตำแหน่งของโน้ต"""
@@ -223,7 +221,7 @@ def draw_chart():
                         self.reset_game()  # รีเซ็ตเกมใหม่
                         waiting = False
                     elif event.key == pygame.K_m:
-                        self.show_menu()  # แสดงเมนูหลัก
+                        self.to_menu()  # แสดงเมนูหลัก
                         waiting = False
                     elif event.key == pygame.K_q:
                         pygame.quit()
@@ -234,15 +232,13 @@ def draw_chart():
         self.notes = []  
         self.score = 0
         self.combo = 0
-        self.hit_notes = 0
+        self.hit_notes =  0
         self.missed_notes = 0
         self.total_notes = 0
         self.accuracy = 100.0
         self.message = ""
         self.message_display_time = 0
         self.start_time = time.time()
-        game = Game()  
-        game.game_loop()  
 
     def toggle_pause(self):
         """ฟังก์ชั่นที่ใช้สำหรับการหยุดหรือเล่นเพลงเมื่อเกมหยุดชั่วคราว"""
@@ -252,46 +248,37 @@ def draw_chart():
         else:
             pygame.mixer.music.pause()  # ถ้าเกมหยุดก็ให้เพลงหยุด
             self.paused = True
-    
+
     def to_menu(self):
         return 'select_song'
-     
-    def update_button_colors(self, buttons, mouse_pos):
-        """อัพเดตสีของปุ่มเมื่อเมาส์เคลื่อนที่เข้าไป"""
-        for button in buttons:
-            if button.rect.collidepoint(mouse_pos):
-                button.color = (200, 200, 255)  # Highlight color when hovered
-            else:
-                button.color = config.WHITE  # Default color
 
     def display_pause_menu(self):
-       
         """แสดงเมนู pause ขณะที่เกมหยุดชั่วคราว"""
-        screen.fill(config.BLACK)
-        
+        screen.fill(BLACK)
+
         # Get the current mouse position (used for hover effects)
         mouse_pos = pygame.mouse.get_pos()
-        
+
         # Font for text
-        font = pygame.font.Font(config.FONT1, 150)
-        
+        font = pygame.font.Font(None, 150)
+
         # Create buttons using the Button class
-        resume_button = config.Button("Resume", 40, int(WIDTH * 0.5), int(HEIGHT * 0.4) - 50, 300, 80, config.WHITE, 255)
-        restart_button = config.Button("Restart", 40, int(WIDTH * 0.5), int(HEIGHT * 0.5) + 50, 300, 80, config.WHITE, 255)
-        menu_button = config.Button("To Menu", 40, int(WIDTH * 0.5), int(HEIGHT * 0.6) + 150, 300, 80, config.WHITE, 255)
-        
+        resume_button = config.Button("Resume", 40, int(WIDTH * 0.5), int(HEIGHT * 0.4) - 50, 300, 80, WHITE, 255)
+        restart_button = config.Button("Restart", 40, int(WIDTH * 0.5), int(HEIGHT * 0.5) + 50, 300, 80, WHITE, 255)
+        menu_button = config.Button("To Menu", 40, int(WIDTH * 0.5), int(HEIGHT * 0.6) + 150, 300, 80, WHITE, 255)
+
         # Draw the buttons and update hover effects
         resume_button.draw(screen, mouse_pos)
         restart_button.draw(screen, mouse_pos)
         menu_button.draw(screen, mouse_pos)
-        
+
         # Draw the "Game Paused" text with shadow
-        pause_surface = font.render("Game Paused", True, config.WHITE)
+        pause_surface = font.render("Game Paused", True, WHITE)
         pause_rect = pause_surface.get_rect(center=(WIDTH // 2, HEIGHT // 7))
-        
-        shadow_surface = font.render("Game Paused", True, (255, 255, 255))  
-        shadow_rect = shadow_surface.get_rect(center=(WIDTH // 2 + 5, HEIGHT // 7 + 5))  
-        
+
+        shadow_surface = font.render("Game Paused", True, (255, 255, 255))
+        shadow_rect = shadow_surface.get_rect(center=(WIDTH // 2 + 5, HEIGHT // 7 + 5))
+
         screen.blit(shadow_surface, shadow_rect)
         screen.blit(pause_surface, pause_rect)
 
@@ -305,42 +292,40 @@ def draw_chart():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     quit()
-                
+
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
-                    
+
                     # Check if any button was clicked using collidepoint
-                    if resume_button.rect.collidepoint(mouse_pos):  # Using collidepoint directly
-                        self.toggle_pause()  # Or whatever action is associated with this button
+                    if resume_button.rect.collidepoint(mouse_pos):
+                        self.toggle_pause()
                         waiting = False
-                    elif restart_button.rect.collidepoint(mouse_pos):  # Using collidepoint directly
-                        self.reset_game()  # Or whatever action is associated with this button
+                    elif restart_button.rect.collidepoint(mouse_pos):
+                        self.reset_game()
                         waiting = False
-                    elif menu_button.rect.collidepoint(mouse_pos):  # Using collidepoint directly
-                        self.to_menu()  # Or whatever action is associated with this button
-                    
+                    elif menu_button.rect.collidepoint(mouse_pos):
+                        self.to_menu()
+
                 elif event.type == pygame.MOUSEMOTION:
                     # Highlight buttons on hover by changing their color when hovered
                     if resume_button.rect.collidepoint(event.pos):
-                        resume_button.color = (200, 200, 255)  # Highlight color when hovered
+                        resume_button.color = (200, 200, 255)
                     else:
-                        resume_button.color = config.WHITE  # Default color
+                        resume_button.color = WHITE
 
                     if restart_button.rect.collidepoint(event.pos):
-                        restart_button.color = (200, 200, 255)  # Highlight color when hovered
+                        restart_button.color = (200, 200, 255)
                     else:
-                        restart_button.color = config.WHITE  # Default color
+                        restart_button.color = WHITE
 
                     if menu_button.rect.collidepoint(event.pos):
-                        menu_button.color = (200, 200, 255)  # Highlight color when hovered
+                        menu_button.color = (200, 200, 255)
                     else:
-                        menu_button.color = config.WHITE  # Default color
+                        menu_button.color = WHITE
 
             # Only update the display once after all handling is done
             pygame.display.flip()
 
-        
-       
     def game_loop(self):
         """ลูปหลักของเกม"""
         self.load_notes("Notes/SONG1.txt")
@@ -351,15 +336,13 @@ def draw_chart():
             current_time = time.time() - start_time
             screen.fill(BLACK)
 
-
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:  # กด ESC เพื่อหยุดหรือเล่นเกม
-                        self.toggle_pause()  # เรียกใช้ฟังก์ชั่น toggle_pause
-                        
-                    
+                        self.toggle_pause()
+
             if self.paused:
                 self.display_pause_menu()  # เมื่อเกมหยุด ให้แสดงเมนู pause
                 continue  # ข้ามการอัปเดตเกม
@@ -367,15 +350,16 @@ def draw_chart():
             keys = pygame.key.get_pressed()
             self.handle_input(keys, current_time)
 
-            self.draw_chart()
+            self .draw_chart()
             self.draw_notes(current_time)
             self.display_message()
             self.display_score()
             self.display_accuracy()
+            self.show_game_over()
 
             pygame.display.flip()
             clock.tick(60)
-            
+
 if __name__ == "__main__":
     game = Game()  # สร้างอินสแตนซ์ของคลาส Game
     game.game_loop()  # เรียกเมธอด game_loop() ผ่านอินสแตนซ์
