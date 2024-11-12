@@ -59,6 +59,7 @@ class Options:
         self.current_resolution = settings.get("screen_size", "1920x1080")  # ค่าเริ่มต้นเป็น 1920x1080
 
     def show(self):
+        config.play_song("MENUSONG")
         while True:
             mouse_pos = pygame.mouse.get_pos()
             mouse_click = pygame.mouse.get_pressed()

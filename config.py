@@ -29,6 +29,13 @@ FONT4 = "Font/Ldfcomicsanslight-6dZo.ttf"
 menuBG = pygame.image.load("picture/menuBG.png")
 Button_default_path = "picture/default_button.png"
 
+# ฟังก์ชั่นเปิดเพลง มึงหัดใช้ฟังก์ชั่นที่กุสร้างบ้าง ขอร้อง
+def play_song(song_name):
+    song_name = song_name
+    song_path = f"songs/{song_name}.mp3"
+    pygame.mixer.music.load(song_path)
+    pygame.mixer.music.play(-1)
+
 # ฟังก์ชันสำหรับบันทึกการตั้งค่าลงในไฟล์
 def save_settings(settings):
     try:
@@ -92,6 +99,9 @@ class Button:
 
         if image_path:
             self.load_image(image_path)
+
+        self.rect = pygame.Rect(0, 0, self.width, self.height)
+        self.rect.center = (self.x, self.y)
 
     def load_image(self, image_path):
         """ โหลดรูปภาพปุ่มจากไฟล์ """

@@ -36,6 +36,7 @@ class TitleScreen:
         self.exit_button = config.Button("Exit", 72, 960, 820, 600, 120, self.RED, 255)
 
     def show(self):
+        config.play_song("MENUSONG")
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
