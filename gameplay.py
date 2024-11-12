@@ -61,7 +61,7 @@ class Note:
         key_mapping = [pygame.K_d, pygame.K_f, pygame.K_j, pygame.K_k]
         
         # เพิ่มระยะเบี่ยงเบนในการตีให้กว้างขึ้น
-        tolerance_increase = 10  # เพิ่มระยะเบี่ยงเบนอีก 10
+        tolerance_increase = 10  # เพิ่ม ระยะเบี่ยงเบนอีก 10
         if keys[key_mapping[self.lane]] and offset < (offset_tolerance + tolerance_increase):
             self.hit = True
             return True
@@ -95,8 +95,7 @@ class Gameplay:
        
     def load_notes(self, file_name):
         """โหลดโน้ตจากไฟล์"""
-        self.notes = []
-        self.total_notes = 0
+        global total_notes
         with open(file_name, "r") as f:
             for line in f:
                 parts = line.strip().split(",")  # แยกข้อมูลที่ใช้คั่นด้วยเครื่องหมายจุลภาค
@@ -150,6 +149,8 @@ class Gameplay:
         if total_notes > 0:
             total_hits = (0 * self.perfect_hits) + (2 * self.good_hits) + (4 * self.bad_hits) + (5 * self.missed_notes) # คะแนนรวมจากการตีโน้ต
             self.accuracy = (5*total_notes - total_hits) / (5*total_notes) * 100  # คำนวณความแม่นยำเป็นเปอร์เซ็นต์
+        else :
+            self.accuracy = 100
      
         # แสดงผลความแม่นยำบนหน้าจอ
         font = pygame.font.Font(None, 36)
@@ -391,8 +392,5 @@ class Gameplay:
             pygame.display.flip()
             clock.tick(60)
 
-           
-            
-if __name__ == "__main__":
-    game = Gameplay()  # สร้างอินสแตนซ์ของคลาส Game
-    game.game_loop()  # เรียกเมธอด game_loop() ผ่านอินสแตนซ์
+
+        

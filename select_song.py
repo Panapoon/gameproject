@@ -11,7 +11,7 @@ import sys
 from option import *
 from title_screen import *
 import config
-from gameplay import *
+#from gameplay import *
 
 class SelectSong:
     def __init__(self, game):
@@ -76,8 +76,8 @@ class SelectSong:
                         return "title"
                     elif event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:
                         print(f"Starting {self.songLIST[self.current_song_index-1]}")
-                        return "gameplay", self.current_song_index
-
+                        return  'gameplay' , self.current_song_index
+                    
                     # ตรวจสอบการเลื่อนเพลงด้วยปุ่ม F และ J
                     elif event.key == pygame.K_f and self.current_song_index > 1:
                         self.current_song_index -= 1
@@ -102,9 +102,10 @@ class SelectSong:
                         # ถ้าคลิกซ้ายเมาส์
                     if mouse_click[0]:
                         print(f"Starting {self.songLIST[self.current_song_index-1]}")
-                        return "gameplay", self.current_song_index
-            #แสดงพื้นหลัง
-            self.screen.blit(self.background_images[self.current_song_index-1], (0,0))            
+                        return  'gameplay' , self.current_song_index
+
+                # แสดงพื้นหลัง
+                self.screen.blit(self.background_images[self.current_song_index-1], (0,0))            
 
             #สร้างปุ่มตรงกลาง
             self.songM_button.text = self.songLIST[self.current_song_index-1]

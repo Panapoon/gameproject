@@ -17,12 +17,14 @@ import pygame
 import pygame
 import sys
 import config
+
 class Summary:
-    def __init__(self, game, score, perfect, good, bad, miss, combo, acc):
+    def __init__(self, game, song_name, score, perfect, good, bad, miss, combo, acc):
         self.game = game
         self.WIDTH, self.HEIGHT = self.game.WIDTH, self.game.HEIGHT
         self.screen = self.game.screen
 
+        self.song_name = song_name
         self.score = score
         self.perfect = perfect
         self.good = good
@@ -43,32 +45,79 @@ class Summary:
             except pygame.error as e:
                 print(f"Error loading image {image_path}: {e}")
 
-        self.current_song_index = 1
-        self.current_score = 0
+        # ปุ่มต่าง ๆ เช่น Restart, Select Song, Main Menu
+        self.restart_button = config.Button("Restart", 20, x=400, y=600, width=120, height=40, color=(0, 120, 255))
+        self.select_song_button = config.Button("Select Song", 20, x=600, y=600, width=120, height=40, color=(0, 120, 255))
+        self.main_menu_button = config.Button("Main Menu", 20, x=800, y=600, width=120, height=40, color=(0, 120, 255))
+    
+    def calculate_rank(self):
+        """ คำนวณแรงค์จากคะแนน """
+        if self.acc >= 95:
+            return "S"
+        elif self.acc >= 90:
+            return "A"
+        elif self.acc >= 80:
+            return "B"
+        elif self.acc >= 70:
+            return "C"
+        else:
+            return "D"
+
+    def handle_events(self, event):
+        """ จัดการเหตุการณ์คลิกปุ่ม """
+        mouse_click = pygame.mouse.get_pressed()
+        mouse_pos = pygame.mouse.get_pos()
+        
+        if self.restart_button.is_clicked(mouse_pos, mouse_click):
+            # คำสั่งสำหรับการรีสตาร์ท
+            pass
+        elif self.select_song_button.is_clicked(mouse_pos, mouse_click):
+            # คำสั่งสำหรับการเลือกเพลงใหม่
+            pass
+        elif self.main_menu_button.is_clicked(mouse_pos, mouse_click):
+            # คำสั่งสำหรับกลับไปหน้าเมนูหลัก
+            pass
 
     def show(self):
-        self.screen.blit(self.background_images[self.current_song_index-1], (0,0))
+        self.screen.fill((0, 0, 0))
 
+        # วาดภาพพื้นหลังตามเพลงที่เลือก
+        current_index = self.songLIST.index(self.song_name)
+        self.screen.blit(self.background_images[current_index], (0, 0))
+
+        # แสดงชื่อเพลงที่มุมซ้ายบน
+        song_name_text = self.font.render(self.song_name, True, (255, 255, 255))
+        self.screen.blit(song_name_text, (20, 20))
         rect_surface = pygame.Surface((1920, 200), pygame.SRCALPHA)
         rect_surface.set_alpha(200)
-        rect_surface.fill(config.BLACK) 
-        self.screen.blit(rect_surface, (0,0))       
-        while True:
-            mouse_pos = pygame.mouse.get_pos()
-            mouse_click = pygame.mouse.get_pressed()
+        rect_surface.fill(config.BLACK)
 
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE:
-                        return "select_song"
-                    
-            for i in range(0, self.score, 5):
-                spb_surface = self.font.render(i, True, config.WHITE)
-                spb_rect = spb_surface.get_rect(center=(self.WIDTH // 2, 75))
-                self.screen.blit(spb_surface, spb_rect)
+        # แสดงสถิติที่ด้านซ้าย
+        stats_texts = [
+            f"Score: {self.score}",
+            f"Perfect: {self.perfect}",
+            f"Good: {self.good}",
+            f"Bad: {self.bad}",
+            f"Miss: {self.miss}",
+            f"Combo: {self.combo}",
+            f"Accuracy: {self.acc:.2f}%",
+        ]
+        y_offset = 100  # ตำแหน่ง Y เริ่มต้นของสถิติ
+        for text in stats_texts:
+            stat_text = self.font.render(text, True, (255, 255, 255))
+            self.screen.blit(stat_text, (20, y_offset))
+            y_offset += 30  # เพิ่มระยะห่างระหว่างแต่ละสถิติ
 
-                
-            pygame.display.flip()
+        # คำนวณแรงค์ (เช่น S, A, B, C, D) ตามเกณฑ์ที่กำหนด
+        rank = self.calculate_rank()
+        rank_text = self.font.render(rank, True, (255, 255, 0))  # สีเหลืองสำหรับ Rank
+        rank_rect = rank_text.get_rect(center=(self.screen.get_width() - 150, self.screen.get_height() // 2))
+        self.screen.blit(rank_text, rank_rect)
+
+        # วาดปุ่ม
+        mouse_pos = pygame.mouse.get_pos()
+        self.restart_button.draw(self.screen, mouse_pos)
+        self.select_song_button.draw(self.screen, mouse_pos)
+        self.main_menu_button.draw(self.screen, mouse_pos)
+        
+        pygame.display.flip()

@@ -53,8 +53,7 @@ screen = 'title'
 next_screen = None 
 while True:
     if screen == 'title':
-        pygame.mixer.music.load('songs/MENUSONG.mp3')
-        pygame.mixer.music.play(-1)
+        config.play_song("MENUSONG")
         next_screen = game_instance.title_screen.show()
     elif screen == 'select_song':
         next_screen, selected_song_index = game_instance.select_song.show()
