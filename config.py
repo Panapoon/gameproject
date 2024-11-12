@@ -82,45 +82,20 @@ class Button:
     def __init__(self, text, text_size, x, y, width, height, color, alpha=255, image_path=None, corner_radius=20):
         self.text = text
         self.text_size = text_size
-        self.base_screen_width, self.base_screen_height = 1920, 1080
-        self.original_x, self.original_y = x, y
-        self.original_width, self.original_height = width, height
+        self.x, self.y = x, y
+        self.width, self.height = width, height
         self.color = color
         self.alpha = alpha
         self.corner_radius = corner_radius
         self.button_image = None
         self.font = pygame.font.Font(FONT1, text_size)  # ใช้ฟอนต์ที่กำหนด
 
-        self.update_size_and_position()
-
         if image_path:
             self.load_image(image_path)
-        else:
-            self.button_image = None
-
-    def update_size_and_position(self):
-        """ ปรับขนาดและตำแหน่งของปุ่มตามขนาดหน้าจอ """
-        current_screen_width, current_screen_height = pygame.display.get_surface().get_size()
-        scale_x = current_screen_width / self.base_screen_width
-        scale_y = current_screen_height / self.base_screen_height
-
-        new_width = int(self.original_width * scale_x)
-        new_height = int(self.original_height * scale_y)
-        new_x = int(self.original_x * scale_x)
-        new_y = int(self.original_y * scale_y)
-
-        # สร้าง rect ใหม่โดยกำหนดให้จุดศูนย์กลางเป็น new_x, new_y
-        self.rect = pygame.Rect(0, 0, new_width, new_height)
-        self.rect.center = (new_x, new_y)
-
-        # ปรับขนาดของภาพปุ่มตามสัดส่วนใหม่ (ถ้ามี)
-        if self.button_image:
-            self.button_image = pygame.transform.scale(self.button_image, (self.rect.width, self.rect.height))
 
     def load_image(self, image_path):
         """ โหลดรูปภาพปุ่มจากไฟล์ """
-        if image_path:
-            self.button_image = self.try_load_image(image_path)
+        self.button_image = self.try_load_image(image_path)
         if not self.button_image:
             for i in range(5):
                 self.button_image = self.try_load_image(f"Button{i+1}.png")
@@ -168,6 +143,9 @@ class Button:
 
     def draw(self, screen, mouse_pos):
         """ วาดปุ่มบนหน้าจอ """
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.rect.center = (self.x, self.y)
+
         if self.button_image:
             if self.button_image.get_size() != (self.rect.width, self.rect.height):
                 self.button_image = pygame.transform.scale(self.button_image, (self.rect.width, self.rect.height))
@@ -204,5 +182,3 @@ class Button:
     def is_clicked(self, mouse_pos, mouse_click):
         """ ตรวจสอบว่าเกิดการคลิกบนปุ่ม """
         return self.rect.collidepoint(mouse_pos) and mouse_click[0] == 1
-    
-    
