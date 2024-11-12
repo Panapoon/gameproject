@@ -25,6 +25,7 @@ class sec_Game:
         self.title_screen = TitleScreen(self)
         self.select_song = SelectSong(self)
         self.option = Options(self)
+        self.gameplay = None
         
     def fade(self, fade_out=True, delay=500):
         fade_surface = pygame.Surface((self.WIDTH, self.HEIGHT))
@@ -52,26 +53,25 @@ screen = 'title'
 next_screen = None 
 while True:
     if screen == 'title':
-        pygame.mixer.music.stop()
         pygame.mixer.music.load('songs/MENUSONG.mp3')
         pygame.mixer.music.play(-1)
         next_screen = game_instance.title_screen.show()
     elif screen == 'select_song':
-        next_screen = game_instance.select_song.show()
+        next_screen, selected_song_index = game_instance.select_song.show()
+        game_instance.current_song_index = selected_song_index
     elif screen == 'gameplay':
+        game_instance.gameplay = Gameplay(game_instance, game_instance.current_song_index)  # ส่ง current_song_index
         next_screen = game_instance.gameplay.show()
     elif screen == 'summary':
         next_screen = game_instance.summary.show()
     elif screen == 'option':
-        pygame.mixer.music.stop()
-        pygame.mixer.music.load('songs/MENUSONG.mp3')
-        pygame.mixer.music.play(-1)
         next_screen = game_instance.option.show()
     else:
         pygame.quit()
         sys.exit()
 
     if next_screen and next_screen != screen:
+        pygame.mixer.music.stop()
         game_instance.fade(fade_out=True)  # เฟดไปสีดำ
         screen = next_screen  # เปลี่ยนหน้าจอ
         next_screen = None  # รีเซ็ตตัวแปรหน้าจอถัดไป

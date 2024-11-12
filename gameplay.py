@@ -2,6 +2,7 @@ import pygame
 import time
 from pygame import mixer
 import config
+from select_song import *
 
 # เริ่มต้น Pygame และ mixer
 pygame.init()
@@ -18,14 +19,7 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 NOTE_COLOR = (0, 255, 0)
 
-# ตัวแปรเกม
-notes = []  # รายการโน้ตทั้งหมด
-score = 0  # คะแนน
-combo = 0  # คอมโบ
-hit_notes = 0  # จำนวนโน้ตที่ถูกตี
-missed_notes = 0  # จำนวนโน้ตที่พลาด
-total_notes = 0  # จำนวนโน้ตทั้งหมด
-accuracy = 100.0  # ความแม่นยำเริ่มต้นที่ 100%
+
 
 # ตัวแปรการแสดงข้อความ
 message = ""
@@ -36,9 +30,7 @@ message_duration = 1.5  # เวลาที่จะแสดงข้อคว
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
 clock = pygame.time.Clock()
 
-# โหลดเพลง
-pygame.mixer.music.load('songs/SONG1.mp3')
-pygame.mixer.music.play()  # เล่นเพลงอย่างต่อเนื่อง
+
 
 class Note:
     """คลาสที่ใช้จัดการกับพฤติกรรมของโน้ต"""
@@ -47,6 +39,7 @@ class Note:
         self.spawn_time = spawn_time  # เวลาที่โน้ตเริ่มต้น
         self.y_position = 0  # ตำแหน่ง Y ของโน้ต
         self.hit = False  # เช็คว่าโน้ตถูกตีหรือยัง
+
 
     def update_position(self, current_time):
         """อัปเดตตำแหน่งของโน้ตตามเวลา"""
@@ -74,9 +67,13 @@ class Note:
             return True
         return False
 
-class Game:
+class Gameplay:
     """คลาสหลักของเกมที่ควบคุมกระบวนการต่างๆ ในเกม"""
-    def __init__(self):
+    def __init__(self,game, current_song_index):
+        self.current_screen = 'gameplay'
+        self.game = game
+        self.current_song_index = current_song_index
+
         self.notes = []  # รายการโน้ตทั้งหมด
         self.score = 0  # คะแนน
         self.combo = 0  # คอมโบ
@@ -90,10 +87,16 @@ class Game:
         self.running = True  # สถานะการทำงานของเกม
         self.start_time = time.time()  # เวลาที่เริ่มเกม
         self.paused = False  # สถานะเกมหยุดชั่วคราว
+        self.perfect_hits = 0  # จำนวนโน้ตที่ตี "Perfect!"
+        self.good_hits = 0  # จำนวนโน้ตที่ตี "Good!"
+        self.bad_hits = 0  # จำนวนโน้ตที่ตี "Bad!"
+        self.load_notes(f"Notes/SONG{self.current_song_index}.txt")
+        pygame.mixer.music.load(f'songs/SONG{self.current_song_index}.mp3')
        
     def load_notes(self, file_name):
         """โหลดโน้ตจากไฟล์"""
-        global total_notes
+        self.notes = []
+        self.total_notes = 0
         with open(file_name, "r") as f:
             for line in f:
                 parts = line.strip().split(",")  # แยกข้อมูลที่ใช้คั่นด้วยเครื่องหมายจุลภาค
@@ -125,6 +128,12 @@ class Game:
         self.score += points  # เพิ่มคะแนนตามประเภทของการตี
         self.combo += 1  # เพิ่มคอมโบ
         self.hit_notes += 1  # เพิ่มจำนวนโน้ตที่ถูกตี
+        if hit_message == "Perfect!":
+            self.perfect_hits += 1
+        elif hit_message == "Good!":
+            self.good_hits += 1
+        elif hit_message == "Bad!":
+            self.bad_hits += 1
         self.notes.remove(note)  # ลบโน้ตที่ตีแล้วออกจากรายการ
         self.message = hit_message  # เก็บข้อความที่จะแสดง
         self.message_display_time = time.time()  # ตั้งเวลาแสดงข้อความ
@@ -137,14 +146,17 @@ class Game:
         self.message_display_time = time.time()  # ตั้งเวลาแสดงข้อความ
 
     def display_accuracy(self):
-        """คำนวณและแสดงความแม่นยำ"""
-        if self.total_notes > 0:
-            self.accuracy = (self.hit_notes / self.total_notes) * 100  # คำนวณความแม่นยำ
-        else:
-            self.accuracy = 100  # ถ้าไม่มีโน้ตเลย กำหนดความแม่นยำเป็น 100
+        total_notes = self.total_notes  # จำนวนโน้ตทั้งหมด
+        if total_notes > 0:
+            total_hits = (0 * self.perfect_hits) + (2 * self.good_hits) + (4 * self.bad_hits) + (5 * self.missed_notes) # คะแนนรวมจากการตีโน้ต
+            self.accuracy = (5*total_notes - total_hits) / (5*total_notes) * 100  # คำนวณความแม่นยำเป็นเปอร์เซ็นต์
+     
+        # แสดงผลความแม่นยำบนหน้าจอ
         font = pygame.font.Font(None, 36)
         accuracy_text = font.render(f"Accuracy: {self.accuracy:.2f}%", True, WHITE)
-        screen.blit(accuracy_text, (10, 90))  # แสดงความแม่นยำบนหน้าจอ
+        screen.blit(accuracy_text, (10, 90))  # แสดงที่มุมซ้ายบน
+
+
 
     def draw_chart(self):
         """วาดเส้นที่ใช้แบ่งเลนสำหรับการเล่นเกม"""
@@ -224,7 +236,8 @@ class Game:
 
     def reset_game(self):
         """รีเซ็ตข้อมูลเกมเมื่อเริ่มใหม่"""
-        self.notes = []  
+        
+        self.notes = []  # Clear the list of notes
         self.score = 0
         self.combo = 0
         self.hit_notes = 0
@@ -233,9 +246,13 @@ class Game:
         self.accuracy = 100.0
         self.message = ""
         self.message_display_time = 0
-        self.start_time = time.time()
-        game = Game()  
-        game.game_loop()  
+        self.start_time = time.time()  # Reset the game timer
+        self.paused = False  # Unpause if game was paused
+        # Reload notes and reset other gameplay-specific settings
+        self.load_notes(f"Notes/SONG{self.current_song_index}.txt")
+        pygame.mixer.music.load(f'songs/SONG{self.current_song_index}.mp3')
+        pygame.mixer.music.play()  # Restart the music
+        self.show()
 
     def toggle_pause(self):
         """ฟังก์ชั่นที่ใช้สำหรับการหยุดหรือเล่นเพลงเมื่อเกมหยุดชั่วคราว"""
@@ -246,8 +263,7 @@ class Game:
             pygame.mixer.music.pause()  # ถ้าเกมหยุดก็ให้เพลงหยุด
             self.paused = True
     
-    def to_menu(self):
-        return 'select_song'
+    
      
     def update_button_colors(self, buttons, mouse_pos):
         """อัพเดตสีของปุ่มเมื่อเมาส์เคลื่อนที่เข้าไป"""
@@ -272,7 +288,9 @@ class Game:
         resume_button = config.Button("Resume", 40, int(WIDTH * 0.5), int(HEIGHT * 0.4) - 50, 300, 80, config.WHITE, 255)
         restart_button = config.Button("Restart", 40, int(WIDTH * 0.5), int(HEIGHT * 0.5) + 50, 300, 80, config.WHITE, 255)
         menu_button = config.Button("To Menu", 40, int(WIDTH * 0.5), int(HEIGHT * 0.6) + 150, 300, 80, config.WHITE, 255)
-        
+        mouse_click = pygame.mouse.get_pressed()
+        mouse_pos = pygame.mouse.get_pos()
+
         # Draw the buttons and update hover effects
         resume_button.draw(screen, mouse_pos)
         restart_button.draw(screen, mouse_pos)
@@ -307,10 +325,10 @@ class Game:
                         self.toggle_pause()  # Or whatever action is associated with this button
                         waiting = False
                     elif restart_button.rect.collidepoint(mouse_pos):  # Using collidepoint directly
-                        self.reset_game()  # Or whatever action is associated with this button
+                        self.reset_game() 
                         waiting = False
-                    elif menu_button.rect.collidepoint(mouse_pos):  # Using collidepoint directly
-                        self.to_menu()  # Or whatever action is associated with this button
+                    elif  menu_button.is_clicked(mouse_pos, mouse_click):
+                        return "select_song"
                     
                 elif event.type == pygame.MOUSEMOTION:
                     # Highlight buttons on hover by changing their color when hovered
@@ -334,9 +352,13 @@ class Game:
 
         
        
-    def game_loop(self):
+    def show(self):
         """ลูปหลักของเกม"""
-        self.load_notes("Notes/SONG1.txt")
+        self.load_notes(f"Notes/SONG{self.current_song_index}.txt")
+        pygame.mixer.music.load(f'songs/SONG{self.current_song_index}.mp3')
+        pygame.mixer.music.play()
+        print(f"Notes/SONG{self.current_song_index}.txt")
+        
         start_time = time.time()
 
         running = True
@@ -368,7 +390,9 @@ class Game:
 
             pygame.display.flip()
             clock.tick(60)
+
+           
             
 if __name__ == "__main__":
-    game = Game()  # สร้างอินสแตนซ์ของคลาส Game
+    game = Gameplay()  # สร้างอินสแตนซ์ของคลาส Game
     game.game_loop()  # เรียกเมธอด game_loop() ผ่านอินสแตนซ์
