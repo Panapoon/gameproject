@@ -72,7 +72,7 @@ class SelectSong:
                     sys.exit()
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        return "title"
+                        return "title", None
                     elif event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:
                         print(f"Starting {self.songLIST[self.current_song_index-1]}")
                         return  'gameplay' , self.current_song_index

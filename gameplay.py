@@ -58,7 +58,7 @@ class Note:
         if self.hit:
             return False
         offset = abs(self.y_position - HIT_LINE_Y)
-        key_mapping = [pygame.K_d, pygame.K_f, pygame.K_j, pygame.K_k]
+        key_mapping = [pygame.K_a, pygame.K_s, pygame.K_j, pygame.K_k]
         
         # เพิ่มระยะเบี่ยงเบนในการตีให้กว้างขึ้น
         tolerance_increase = 10  # เพิ่ม ระยะเบี่ยงเบนอีก 10
@@ -90,7 +90,6 @@ class Gameplay:
         self.perfect_hits = 0  # จำนวนโน้ตที่ตี "Perfect!"
         self.good_hits = 0  # จำนวนโน้ตที่ตี "Good!"
         self.bad_hits = 0  # จำนวนโน้ตที่ตี "Bad!"
-        self.load_notes(f"Notes/SONG{self.current_song_index}.txt")
         pygame.mixer.music.load(f'songs/SONG{self.current_song_index}.mp3')
        
     def load_notes(self, file_name):
@@ -147,10 +146,8 @@ class Gameplay:
     def display_accuracy(self):
         total_notes = self.total_notes  # จำนวนโน้ตทั้งหมด
         if total_notes > 0:
-            total_hits = (0 * self.perfect_hits) + (2 * self.good_hits) + (4 * self.bad_hits) + (5 * self.missed_notes) # คะแนนรวมจากการตีโน้ต
-            self.accuracy = (5*total_notes - total_hits) / (5*total_notes) * 100  # คำนวณความแม่นยำเป็นเปอร์เซ็นต์
-        else :
-            self.accuracy = 100
+            if (self.perfect_hits + self.good_hits + self.bad_hits + self.missed_notes) > 0:
+                self.accuracy = ((self.perfect_hits * 1 + self.good_hits * 0.6 + self.bad_hits * 0.2)/(self.perfect_hits + self.good_hits + self.bad_hits + self.missed_notes)) * 100
      
         # แสดงผลความแม่นยำบนหน้าจอ
         font = pygame.font.Font(None, 36)
@@ -249,8 +246,11 @@ class Gameplay:
         self.message_display_time = 0
         self.start_time = time.time()  # Reset the game timer
         self.paused = False  # Unpause if game was paused
+        self.perfect_hits = 0
+        self.good_hits = 0
+        self.bad_hits = 0
+        self.missed_notes = 0
         # Reload notes and reset other gameplay-specific settings
-        self.load_notes(f"Notes/SONG{self.current_song_index}.txt")
         pygame.mixer.music.load(f'songs/SONG{self.current_song_index}.mp3')
         pygame.mixer.music.play()  # Restart the music
         self.show()
