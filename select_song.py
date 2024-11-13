@@ -18,7 +18,6 @@ class SelectSong:
         self.game = game
         self.WIDTH, self.HEIGHT = self.game.WIDTH, self.game.HEIGHT
         self.screen = self.game.screen
-        self.current_screen = "select_song"
 
         # สร้างเพลง
         self.songLIST = config.songLIST

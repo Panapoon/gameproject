@@ -2,16 +2,6 @@ import pygame
 import json
 import os
 
-# ขนาดหน้าจอ
-screen_size = {
-    "1024x768": (1024, 768),
-    "1280x720": (1280, 720),
-    "1366x768": (1366, 768),
-    "1600x900": (1600, 900),
-    "1920x1080": (1920, 1080)
-}
-current_size_index = 0
-
 # สี
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -55,7 +45,6 @@ def load_settings():
     except FileNotFoundError:
         print("No settings file found, using default settings.")
         return {
-            "screen_size": "1920x1080",  # ค่าพื้นฐานที่คุณต้องการ
             "volume": 1.0,
             "note_speed": 1.0,
             "key_bindings": {
@@ -68,7 +57,6 @@ def load_settings():
     except Exception as e:
         print(f"Error loading settings: {e}")
         return {
-            "screen_size": "1920x1080",
             "volume": 1.0,
             "note_speed": 1.0,
             "key_bindings": {

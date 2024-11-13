@@ -52,7 +52,7 @@ class TitleScreen:
             self.exit_button.draw(self.screen, mouse_pos)
 
             # สร้างการเปลี่ยนสีแบบฟุ้งสำหรับข้อความ
-            title_surface = self.font.render("Rhythm Game", True, (255, 20, 147))  # สีชมพู
+            title_surface = self.font.render("HEE KLUAY", True, (255, 20, 147))  # สีชมพู
             title_rect = title_surface.get_rect(center=(self.WIDTH // 2, self.HEIGHT // 4))
 
             # จำลองเอฟเฟกต์ฟุ้ง โดยการวาดข้อความซ้ำหลายๆ ครั้งในตำแหน่งที่เบี่ยงเบน
