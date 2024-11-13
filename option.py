@@ -137,9 +137,6 @@ class Options:
             # ตรวจสอบการคลิกปุ่ม Reset
             if self.reset_button.is_clicked(mouse_pos, mouse_click):
                 self.reset_settings()  # รีเซ็ตการตั้งค่า
-            pygame.mixer.music.stop()
-            pygame.mixer.music.load('songs/MENUSONG.mp3')
-            pygame.mixer.music.play(-1)
 
             pygame.display.flip()
 

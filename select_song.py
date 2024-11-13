@@ -63,7 +63,6 @@ class SelectSong:
     def show(self):
         self.play_song()
         while True:
-
             mouse_pos = pygame.mouse.get_pos()
             mouse_click = pygame.mouse.get_pressed()
 
@@ -81,31 +80,22 @@ class SelectSong:
                     # ตรวจสอบการเลื่อนเพลงด้วยปุ่ม F และ J
                     elif event.key == pygame.K_f and self.current_song_index > 1:
                         self.current_song_index -= 1
-                        print(f"Current song index: {self.current_song_index}")
+                        self.play_song()
                     elif event.key == pygame.K_j and self.current_song_index < len(self.songLIST) :
                         self.current_song_index += 1
-                        print(f"Current song index: {self.current_song_index}")
                         self.play_song()
 
                 #ควบคุมด้วย scroll wheel
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 4 and self.current_song_index > 1:  # scroll up
                         self.current_song_index -= 1
-                        print(f"Current song index: {self.current_song_index}")
                         self.play_song()
                     elif event.button == 5 and self.current_song_index < len(self.songLIST):  # scroll down
                         self.current_song_index += 1
-                        print(f"Current song index: {self.current_song_index}")
-                        self.play_song()
+                        self.play_song()                        
 
-                elif self.songM_button.rect.collidepoint(mouse_pos):
-                        # ถ้าคลิกซ้ายเมาส์
-                    if mouse_click[0]:
-                        print(f"Starting {self.songLIST[self.current_song_index-1]}")
-                        return  'gameplay' , self.current_song_index
-
-                # แสดงพื้นหลัง
-                self.screen.blit(self.background_images[self.current_song_index-1], (0,0))            
+            # แสดงพื้นหลัง
+            self.screen.blit(self.background_images[self.current_song_index-1], (0,0))            
 
             #สร้างปุ่มตรงกลาง
             self.songM_button.text = self.songLIST[self.current_song_index-1]
@@ -118,7 +108,6 @@ class SelectSong:
                 if songL_button.is_clicked(mouse_pos, mouse_click) and not self.is_clicking_left:
                     self.current_song_index -= 1
                     self.is_clicking_left = True  # ตั้งค่าเป็น True เพื่อป้องกันการคลิกซ้ำ
-                    print(f"Current song index: {self.current_song_index}")
                     self.play_song()
                 elif not songL_button.is_clicked(mouse_pos, mouse_click):
                     self.is_clicking_left = False  # ตั้งค่าเป็น False เมื่อไม่ได้คลิก
@@ -129,15 +118,13 @@ class SelectSong:
                 if songR_button.is_clicked(mouse_pos, mouse_click) and not self.is_clicking_right:
                     self.current_song_index += 1
                     self.is_clicking_right = True  # ตั้งค่าเป็น True เพื่อป้องกันการคลิกซ้ำ
-                    print(f"Current song index: {self.current_song_index}")
                     self.play_song()
                 elif not songR_button.is_clicked(mouse_pos, mouse_click):
                     self.is_clicking_right = False  # ตั้งค่าเป็น False เมื่อไม่ได้คลิก
 
             if self.songM_button.is_clicked(mouse_pos, mouse_click) and not self.is_clicking_mid:
-                pass
+                return  'gameplay' , self.current_song_index
                 self.is_clicking_mid = True  # ตั้งค่าเป็น False เมื่อไม่ได้คลิก
-                print(f"Starting {self.songLIST[self.current_song_index-1]}")
             elif not self.songM_button.is_clicked(mouse_pos, mouse_click):
                 self.is_clicking_mid = False  # ตั้งค่าเป็น False เมื่อไม่ได้คลิก
 
