@@ -9,6 +9,7 @@ import pygame
 import sys
 import config
 from config import *  # สำหรับการใช้การตั้งค่าต่างๆ
+from pydub import AudioSegment
 
 class Options:
     def __init__(self, game):
@@ -109,11 +110,11 @@ class Options:
             note_speed_rect = note_speed_surface.get_rect(center=(self.WIDTH // 2 , int(0.5 * self.HEIGHT)))
             self.screen.blit(note_speed_surface, note_speed_rect)
 
-            # Handle note speed button clicks
+            # การปรับความเร็วของโน้ตเมื่อกดปุ่ม
             if self.speed_left_button.is_clicked(mouse_pos, mouse_click):
-                self.note_speed = max(0.1, self.note_speed - 0.001)
+                self.note_speed = max(0.1, self.note_speed - 0.001)  # ลดความเร็วโน้ต
             if self.speed_right_button.is_clicked(mouse_pos, mouse_click):
-                self.note_speed = min(2.0, self.note_speed + 0.001)
+                self.note_speed = min(2.0, self.note_speed + 0.001)  # เพิ่มความเร็วโน้ต
 
             # ตรวจสอบการคลิกปุ่ม Apply
             if self.apply_button.is_clicked(mouse_pos, mouse_click):

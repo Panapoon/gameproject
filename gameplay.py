@@ -4,30 +4,100 @@ from pygame import mixer
 import config
 from select_song import *
 from option import *
-from note import *
+
+class Note:
+    def __init__(self, lane, spawn_time, hit_lane_y, duration=None, note_speed=300):
+        self.WIDTH, self.HEIGHT = 1920, 1080
+        self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT), pygame.FULLSCREEN)
+        self.lane = lane
+        self.spawn_time = spawn_time
+        self.hit_lane_y = hit_lane_y  # รับค่า hit_lane_y จากภายนอก
+        self.duration = duration
+        self.hit = False
+        self.note_speed = note_speed*300 # รับ note_speed จากภายนอก
+        self.note_color = (0, 255, 0)
+        self.lane_width = self.WIDTH / 4
+        self.hit_line_y = self.HEIGHT - 50  # จุดที่จะตีโน้ต
+        self.note_height_offset = 0
+        self.y_position = 0
+
+    def update_position(self, current_time):
+        self.elapsed = current_time - self.spawn_time
+        self.y_position = self.elapsed * self.note_speed  # ใช้ note_speed ในการอัปเดตตำแหน่ง
+
+    def draw(self):
+        if self.y_position <= self.HEIGHT:
+            pygame.draw.circle(self.screen, self.note_color, 
+                               (self.lane * self.lane_width + self.lane_width // 2, 
+                                int(self.y_position)), 30)
+
+    def is_hit(self, keys, offset_tolerance, key_bindings):
+        """Check if the note is hit by checking the offset tolerance and key press."""
+        
+        # Return early if the note has already been hit
+        if self.hit:
+            return False
+
+        # Calculate the offset between the note's y-position and the hit lane y position
+        offset = abs(self.y_position - self.hit_lane_y)
+
+        # Retrieve custom keys for the actions D, F, K, L from the key_bindings dictionary
+        custom_keys = [key_bindings.get(action) for action in ["D", "F", "K", "L"]]
+
+        # Add an additional tolerance for the hit detection
+        tolerance_increase = 10  
+
+        # Ensure the lane index is valid and within range
+        if 0 <= self.lane < len(custom_keys):
+            key_to_check = custom_keys[self.lane]
+            
+            # Ensure key_to_check is not None and that the corresponding key is pressed
+            if key_to_check is not None:
+                # Check if the key is pressed using pygame's key state
+                if keys[key_to_check] and offset < (offset_tolerance + tolerance_increase):
+                    self.hit = True
+                    return True
+        
+        return False
+
+
 
 class Gameplay:
     def __init__(self, game, song_index):
         self.game = game
         self.WIDTH, self.HEIGHT = self.game.WIDTH, self.game.HEIGHT
         self.screen = self.game.screen
+        self.key_bindings = game.option.key_bindings
         self.song_index = song_index
-        self.song = config.songLIST[self.song_index]
+        
+        # สร้างชื่อเพลงจาก song_index
+        self.song_name = f"SONG{self.song_index + 1}"  # เพิ่ม 1 เพราะ index เริ่มจาก 0
+        
+        # หาก song_index เกินขอบเขตของ songLIST ให้ตั้งค่า song เป็น None
+        if self.song_index < len(config.songLIST):
+            self.song = config.songLIST[self.song_index]
+        else:
+            self.song = None  # หรือสามารถจัดการกับกรณีนี้เพิ่มเติม
+        
         self.lane_width = self.WIDTH / 4
-        self.hit_line_y = self.HEIGHT - 50 # จุดที่จะตีโน้ต
+        self.hit_line_y = self.HEIGHT - 50  # จุดที่จะตีโน้ต
         self.note_height_offset = 0
 
-        self.settings = config.load_settings()
-        self.note_speed = self.settings.get("note_speed")  # ความเร็วของโน้ตที่ลงมา
+        self.settings = config.load_settings()  # โหลดการตั้งค่าจาก config
+        self.note_speed = self.settings.get("note_speed", 300)  # ใช้ note_speed ที่ตั้งไว้
 
         self.messege_display_time = 0
         self.messege_duration = 1.5
 
         self.clock = pygame.time.Clock()
 
-        self.Note = Note(self, self.lane, self.spawn_time, duration=None)
+        self.lane = 0  # กำหนดให้เริ่มจากเลนที่ 0
+        self.spawn_time = time.time()  # เริ่มต้นเวลา spawn_time ใช้เวลาปัจจุบัน (หรือใช้ค่าที่เหมาะสม)
 
-        self.notes = []  
+        # สร้างโน้ตใหม่ที่กำหนด lane และ spawn_time พร้อมกับ note_speed ที่ปรับจาก settings
+        self.Note = Note(self.lane, self.spawn_time, self.hit_line_y, note_speed=self.note_speed)
+
+        self.notes = []  # รายการโน้ตที่กำหนดขึ้น
         self.score = 0 
         self.combo = 0  
         self.hit_notes = 0 
@@ -37,18 +107,15 @@ class Gameplay:
         self.message = ""  
         self.message_display_time = 0 
         self.message_duration = 1.5  
-        self.running = True  # 
+        self.running = True  
         self.start_time = time.time() 
         self.paused = False  
         self.perfect_hits = 0  
         self.good_hits = 0  
         self.bad_hits = 0  
 
-        config.play_song(self.song_name)
-    
     def load_notes(self, file_name):
         """โหลดโน้ตจากไฟล์"""
-        global total_notes
         with open(file_name, "r") as f:
             for line in f:
                 parts = line.strip().split(",")  # แยกข้อมูลที่ใช้คั่นด้วยเครื่องหมายจุลภาค
@@ -57,7 +124,9 @@ class Gameplay:
                     continue
                 lane = int(parts[0])  # เลนที่โน้ตจะไป
                 spawn_time = float(parts[1])  # เวลาที่โน้ตจะปรากฏ
-                self.notes.append(Note(lane, self.spawn_time))  # เพิ่มโน้ตใหม่ในรายการ
+
+                # สร้างโน้ตใหม่พร้อมกับ hit_lane_y และ note_speed
+                self.notes.append(Note(lane, spawn_time, self.hit_line_y, note_speed=self.note_speed))  # ส่ง note_speed ไปให้ Note
                 self.total_notes += 1
 
     def handle_input(self, keys, current_time):
@@ -69,11 +138,28 @@ class Gameplay:
         if self.paused:  # ถ้าเกมหยุดชั่วคราว
             return
 
-        for note in self.notes[:]:  # ลูปผ่านโน้ตทั้งหมด
+        key_bindings = self.game.gameplay.key_bindings  # ดึง key_bindings จาก gameplay
+
+        for note in self.notes[:]:  
             for i, tolerance in enumerate(hit_tolerances):  # ตรวจสอบแต่ละระดับของการตีโน้ต
-                if note.is_hit(keys, tolerance):  # เช็คว่าโน้ตถูกตีหรือไม่
+                if note.is_hit(keys, tolerance, key_bindings):  # ส่ง key_bindings ให้ฟังก์ชัน is_hit()
                     self.register_hit(note, points[i], hit_messages[i])
                     break
+
+    def register_hit(self, note, points, hit_message):
+        """ลงทะเบียนการตีโน้ต"""
+        self.score += points  # เพิ่มคะแนนตามประเภทของการตี
+        self.combo += 1  # เพิ่มคอมโบ
+        self.hit_notes += 1  # เพิ่มจำนวนโน้ตที่ถูกตี
+        if hit_message == "Perfect!":
+            self.perfect_hits += 1
+        elif hit_message == "Good!":
+            self.good_hits += 1
+        elif hit_message == "Bad!":
+            self.bad_hits += 1
+        self.notes.remove(note)  # ลบโน้ตที่ตีแล้วออกจากรายการ
+        self.message = hit_message  # เก็บข้อความที่จะแสดง
+        self.message_display_time = time.time()  # ตั้งเวลาแสดงข้อความ
 
     def register_hit(self, note, points, hit_message):
         """ลงทะเบียนการตีโน้ต"""
@@ -112,7 +198,8 @@ class Gameplay:
         """วาดเส้นที่ใช้แบ่งเลนสำหรับการเล่นเกม"""
         for i in range(4):
             pygame.draw.line(self.screen, config.WHITE, (i * self.lane_width, 0), (i * self.lane_width, self.HEIGHT), 2)
-        pygame.draw.line(self.screen, config.WHITE, (0, self.hie_lane_y), (self.WIDTH, self.hit_lane_y), 2)  # วาดเส้น HIT_LINE_Y
+        pygame.draw.line(self.screen, config.WHITE, (0, self.hit_line_y), (self.WIDTH, self.hit_line_y), 2)
+  # วาดเส้น HIT_LINE_Y
 
     def draw_notes(self, current_time):
         """วาดโน้ตทั้งหมดและอัปเดตตำแหน่งของโน้ต"""
@@ -138,26 +225,7 @@ class Gameplay:
         self.screen.blit(score_text, (10, 10))  # แสดงคะแนนที่มุมซ้ายบน
         self.screen.blit(combo_text, (10, 50))  # แสดงคอมโบที่มุมซ้ายบน
 
-    def show_game_over(self):
-        """แสดงหน้าจอสรุปผลหลังจากจบเกม"""
-        self.screen.fill(config.BLACK)  # ล้างหน้าจอด้วยสีดำ
-        font = pygame.font.Font(None, 72)
-
-        game_over_text = font.render("Game Over", True, config.WHITE)
-        self.screen.blit(game_over_text, (self.WIDTH // 2 - game_over_text.get_width() // 2, self.HEIGHT // 4))
-
-        score_text = font.render(f"Final Score: {self.score}", True, config.WHITE)
-        self.screen.blit(score_text, (self.WIDTH // 2 - score_text.get_width() // 2, self.HEIGHT // 2))
-
-        accuracy_text = font.render(f"Accuracy: {self.accuracy:.2f}%", True, WHITE)
-        self.screen.blit(accuracy_text, (self.WIDTH // 2 - accuracy_text.get_width() // 2, self.HEIGHT // 2 + 50))
-
-        pygame.display.flip()
-
-        time.sleep(2)  # ให้เวลา 2 วินาที ก่อนจะกลับไปที่หน้าหลักหรือรีสตาร์ท
-
-        # ให้ผู้เล่นเลือกว่าจะเล่นต่อหรือออกจากเกม
-        self.show_restart_or_exit()
+     
 
     def show_restart_or_exit(self):
         """แสดงตัวเลือกให้ผู้เล่นเลือกว่าจะเล่นใหม่หรือออก"""
@@ -185,8 +253,25 @@ class Gameplay:
                         quit()
 
     def reset_game(self):
-        """รีเซ็ตข้อมูลเกมเมื่อเริ่มใหม่"""
-        return "gameplay", self.song_index
+        self.notes = []  # Clear the list of notes
+        self.score = 0
+        self.combo = 0
+        self.hit_notes = 0
+        self.missed_notes = 0
+        self.total_notes = 0
+        self.accuracy = 100.0
+        self.message = ""
+        self.message_display_time = 0
+        self.start_time = time.time()  # Reset the game timer
+        self.paused = False  # Unpause if game was paused
+        self.perfect_hits = 0
+        self.good_hits = 0
+        self.bad_hits = 0
+        self.missed_notes = 0
+        # Reload notes and reset other gameplay-specific settings
+        pygame.mixer.music.load(f'songs/SONG{self.song_index}.mp3')
+        pygame.mixer.music.play()  # Restart the music
+        self.show()
 
     def toggle_pause(self):
         """ฟังก์ชั่นที่ใช้สำหรับการหยุดหรือเล่นเพลงเมื่อเกมหยุดชั่วคราว"""
@@ -288,11 +373,14 @@ class Gameplay:
        
     def show(self):
         """ลูปหลักของเกม"""
-        self.load_notes(f"Notes/SONG{self.current_song_index}.txt")
-        pygame.mixer.music.load(f'songs/SONG{self.current_song_index}.mp3')
-        pygame.mixer.music.play()
-        print(f"Notes/SONG{self.current_song_index}.txt")
+        self.load_notes(f"Notes/SONG{self.song_index}.txt")
+        song = AudioSegment.from_file(f'songs/SONG{self.song_index}.mp3')
+        song = song.speedup(playback_speed=self.note_speed / 300)
+        song.export(f'songs/adjusted_song{self.song_index}.mp3', format='mp3')
         
+        pygame.mixer.music.load(f'songs/adjusted_song{self.song_index}.mp3')
+        pygame.mixer.music.play()
+        print(f"Notes/SONG{self.song_index}.txt")
         start_time = time.time()
 
         running = True
