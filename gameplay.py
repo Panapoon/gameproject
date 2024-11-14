@@ -373,14 +373,11 @@ class Gameplay:
        
     def show(self):
         """ลูปหลักของเกม"""
-        self.load_notes(f"Notes/SONG{self.song_index}.txt")
-        song = AudioSegment.from_file(f'songs/SONG{self.song_index}.mp3')
-        song = song.speedup(playback_speed=self.note_speed / 300)
-        song.export(f'songs/adjusted_song{self.song_index}.mp3', format='mp3')
-        
-        pygame.mixer.music.load(f'songs/adjusted_song{self.song_index}.mp3')
+        self.load_notes(f"Notes/SONG{self.current_song_index}.txt")
+        pygame.mixer.music.load(f'songs/SONG{self.current_song_index}.mp3')
         pygame.mixer.music.play()
-        print(f"Notes/SONG{self.song_index}.txt")
+        print(f"Notes/SONG{self.current_song_index}.txt")
+        
         start_time = time.time()
 
         running = True
