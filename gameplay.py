@@ -16,7 +16,8 @@ class Note:
         self.hit = False
         self.note_speed = 300
         self.note_color = (0, 255, 0)
-        self.lane_width = self.WIDTH / 4
+        self.lane_width = self.WIDTH / 8
+        self.center_offset = (self.WIDTH - (self.lane_width * 4)) / 2
         self.hit_line_y = self.HEIGHT - 50  # จุดที่จะตีโน้ต
         self.note_height_offset = 0
         self.y_position = 0
@@ -27,9 +28,10 @@ class Note:
 
     def draw(self):
         if self.y_position <= self.HEIGHT:
+            # คำนวณตำแหน่ง x โดยใช้ center offset
+            x_position = self.lane * self.lane_width + self.lane_width // 2 + self.center_offset
             pygame.draw.circle(self.screen, self.note_color, 
-                               (self.lane * self.lane_width + self.lane_width // 2, 
-                                int(self.y_position)), 30)
+                               (int(x_position), int(self.y_position)), 30)
 
     def is_hit(self, keys, offset_tolerance, key_bindings):
         """Check if the note is hit by checking the offset tolerance and key press."""
@@ -80,7 +82,17 @@ class Gameplay:
         else:
             self.song = None  # หรือสามารถจัดการกับกรณีนี้เพิ่มเติม
         
-        self.lane_width = self.WIDTH / 4
+        self.background_images = []
+        for i in range(len(config.songLIST)):  # แก้ไขให้ตรงกับจำนวนเพลงที่มี
+            image_path = f"picture/BACKGROUND/BGB{i+1}.png"
+            try:
+                # โหลดและเพิ่มภาพพื้นหลัง
+                self.background_images.append(pygame.transform.scale(pygame.image.load(image_path), (self.WIDTH, self.HEIGHT)))
+            except pygame.error as e:
+                print(f"Error loading image {image_path}: {e}")
+
+        self.lane_width = self.WIDTH / 8
+        self.center_offset = (self.WIDTH - (self.lane_width * 4)) / 2
         self.hit_line_y = self.HEIGHT - 50  # จุดที่จะตีโน้ต
         self.note_height_offset = 0
 
@@ -161,8 +173,13 @@ class Gameplay:
                     self.register_hit(note, points[i], hit_messages[i])
                     break
 
+    def show_hit_flash(self, x_position, y_position):
+        """แสดงแฟลชที่จุดที่โน้ตถูกตี"""
+        flash_color = (255, 255, 255)
+        for radius in range(10, 30, 5):
+            pygame.draw.circle(self.screen, flash_color, (x_position, y_position), radius, 2)
+
     def register_hit(self, note, points, hit_message):
-        """ลงทะเบียนการตีโน้ต"""
         self.score += points  # เพิ่มคะแนนตามประเภทของการตี
         self.combo += 1  # เพิ่มคอมโบ
         self.hit_notes += 1  # เพิ่มจำนวนโน้ตที่ถูกตี
@@ -195,11 +212,13 @@ class Gameplay:
         self.screen.blit(accuracy_text, (10, 90))  # แสดงที่มุมซ้ายบน
 
     def draw_chart(self):
-        """วาดเส้นที่ใช้แบ่งเลนสำหรับการเล่นเกม"""
+        """วาดเส้นที่ใช้แบ่งเลนสำหรับการเล่นเกม และเพิ่มเส้นขอบด้านขวาสำหรับเลนสุดท้าย"""
         for i in range(4):
-            pygame.draw.line(self.screen, config.WHITE, (i * self.lane_width, 0), (i * self.lane_width, self.HEIGHT), 2)
-        pygame.draw.line(self.screen, config.WHITE, (0, self.hit_line_y), (self.WIDTH, self.hit_line_y), 2)
-  # วาดเส้น HIT_LINE_Y
+            pygame.draw.line(self.screen, config.WHITE, (i * self.lane_width + self.center_offset, 0), (i * self.lane_width + self.center_offset, self.HEIGHT), 2)
+        # เพิ่มเส้นขอบด้านขวาสำหรับเลนที่ 4
+        pygame.draw.line(self.screen, config.WHITE, (self.center_offset + 4 * self.lane_width, 0), (self.center_offset + 4 * self.lane_width, self.HEIGHT), 2)
+        # วาดเส้นที่ตำแหน่งตีโน้ต
+        pygame.draw.line(self.screen, config.WHITE, (self.center_offset, self.hit_line_y), (self.center_offset + 4 * self.lane_width, self.hit_line_y), 2)
 
     def draw_notes(self, current_time):
         """วาดโน้ตทั้งหมดและอัปเดตตำแหน่งของโน้ต"""
@@ -211,11 +230,24 @@ class Gameplay:
                 self.register_miss(note)  # ลงทะเบียนการพลาด
 
     def display_message(self):
-        """แสดงข้อความ feedback เช่น "Perfect!", "Good!", "Missed!" เป็นต้น"""
         if self.message and (time.time() - self.message_display_time) < self.message_duration:
-            font = pygame.font.Font(None, 36)
-            text = font.render(self.message, True, WHITE)
-            self.screen.blit(text, (self.WIDTH // 2 - text.get_width() // 2, self.HEIGHT // 2 - text.get_height() // 2))
+            font = pygame.font.Font(None, 72)
+            
+            # ตั้งสีข้อความ
+            if self.message == "Perfect!":
+                text_color = (0, 255, 0)  # Green
+            elif self.message == "Good!":
+                text_color = (255, 165, 0)  # Orange
+            elif self.message == "Bad!":
+                text_color = (255, 0, 0)  # Red
+            elif self.message == "Missed!":
+                text_color = (128, 128, 128)  # Gray
+
+            message_surface = font.render(self.message, True, text_color)
+            
+            # ข้อความกลางจอ
+            x, y = self.WIDTH // 2 - message_surface.get_width() // 2, self.HEIGHT // 3
+            self.screen.blit(message_surface, (x, y))
 
     def display_score(self):
         """แสดงคะแนนและคอมโบ"""
@@ -224,8 +256,6 @@ class Gameplay:
         combo_text = font.render(f"Combo: {self.combo}", True, config.WHITE)
         self.screen.blit(score_text, (10, 10))  # แสดงคะแนนที่มุมซ้ายบน
         self.screen.blit(combo_text, (10, 50))  # แสดงคอมโบที่มุมซ้ายบน
-
-     
 
     def show_restart_or_exit(self):
         """แสดงตัวเลือกให้ผู้เล่นเลือกว่าจะเล่นใหม่หรือออก"""
@@ -268,7 +298,6 @@ class Gameplay:
         self.good_hits = 0
         self.bad_hits = 0
         self.missed_notes = 0
-        self.show()
 
     def toggle_pause(self):
         """ฟังก์ชั่นที่ใช้สำหรับการหยุดหรือเล่นเพลงเมื่อเกมหยุดชั่วคราว"""
@@ -279,7 +308,16 @@ class Gameplay:
             pygame.mixer.music.pause()  # ถ้าเกมหยุดก็ให้เพลงหยุด
             self.paused = True
     
-    
+    def draw_combo_effects(self):
+        """Draw effects for high combo counts."""
+        if self.combo >= 10:  # Only start effects if combo is high
+            color_intensity = min(255, self.combo * 10)  # Intensity based on combo count
+            color = (255, color_intensity, color_intensity)  # Red-ish color based on combo
+            effect_radius = min(100, self.combo * 3)  # Increase radius with combo
+            
+            pygame.draw.circle(self.screen, color, 
+                            (self.WIDTH // 2, self.hit_line_y), 
+                            effect_radius, 5)
      
     def update_button_colors(self, buttons, mouse_pos):
         """อัพเดตสีของปุ่มเมื่อเมาส์เคลื่อนที่เข้าไป"""
@@ -376,24 +414,25 @@ class Gameplay:
         print(f"Notes/SONG{self.song_index}.txt")
         
         start_time = time.time()
-
         running = True
         while running:
             current_time = time.time() - start_time
-            self.screen.fill(config.BLACK)
+
+            # วาดภาพพื้นหลังตาม song_index
+            if 0 <= self.song_index - 1 < len(self.background_images):
+                self.screen.blit(self.background_images[self.song_index - 1], (0, 0))
 
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:  # กด ESC เพื่อหยุดหรือเล่นเกม
-                        self.toggle_pause()  # เรียกใช้ฟังก์ชั่น toggle_pause
-                        
-                    
+                    if event.key == pygame.K_ESCAPE:
+                        self.toggle_pause()
+
             if self.paused:
-                self.display_pause_menu()  # เมื่อเกมหยุด ให้แสดงเมนู pause
-                continue  # ข้ามการอัปเดตเกม
+                self.display_pause_menu()
+                continue
 
             keys = pygame.key.get_pressed()
             self.handle_input(keys, current_time)
