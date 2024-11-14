@@ -72,6 +72,10 @@ class Gameplay:
         self.key_bindings = game.option.key_bindings
         # กำหนด song_index ที่ได้รับมา
         self.song_index = song_index
+
+        # โหลด hit sound
+        self.hit_sound = pygame.mixer.Sound("Notes/Hit_Sound.mp3")
+        self.hit_sound.set_volume(0.2)
         
         # สร้างชื่อเพลงจาก song_index
         self.song_name = f"SONG{self.song_index + 1}"  # เพิ่ม 1 เพราะ index เริ่มจาก 0
@@ -183,6 +187,9 @@ class Gameplay:
         self.score += points  # เพิ่มคะแนนตามประเภทของการตี
         self.combo += 1  # เพิ่มคอมโบ
         self.hit_notes += 1  # เพิ่มจำนวนโน้ตที่ถูกตี
+
+        self.hit_sound.play() # เล่นเสียงตอนกด
+
         if hit_message == "Perfect!":
             self.perfect_hits += 1
         elif hit_message == "Good!":
