@@ -6,7 +6,7 @@ from select_song import *
 from option import *
 
 class Note:
-    def __init__(self, lane, spawn_time, hit_lane_y, duration=None, note_speed=300):
+    def __init__(self, lane, spawn_time, hit_lane_y, duration=None):
         self.WIDTH, self.HEIGHT = 1920, 1080
         self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT), pygame.FULLSCREEN)
         self.lane = lane
@@ -14,7 +14,7 @@ class Note:
         self.hit_lane_y = hit_lane_y  # รับค่า hit_lane_y จากภายนอก
         self.duration = duration
         self.hit = False
-        self.note_speed = note_speed*300 # รับ note_speed จากภายนอก
+        self.note_speed = 300
         self.note_color = (0, 255, 0)
         self.lane_width = self.WIDTH / 4
         self.hit_line_y = self.HEIGHT - 50  # จุดที่จะตีโน้ต
@@ -23,7 +23,7 @@ class Note:
 
     def update_position(self, current_time):
         self.elapsed = current_time - self.spawn_time
-        self.y_position = self.elapsed * self.note_speed  # ใช้ note_speed ในการอัปเดตตำแหน่ง
+        self.y_position = self.elapsed * self.note_speed
 
     def draw(self):
         if self.y_position <= self.HEIGHT:
@@ -68,6 +68,7 @@ class Gameplay:
         self.WIDTH, self.HEIGHT = self.game.WIDTH, self.game.HEIGHT
         self.screen = self.game.screen
         self.key_bindings = game.option.key_bindings
+        # กำหนด song_index ที่ได้รับมา
         self.song_index = song_index
         
         # สร้างชื่อเพลงจาก song_index
@@ -83,19 +84,20 @@ class Gameplay:
         self.hit_line_y = self.HEIGHT - 50  # จุดที่จะตีโน้ต
         self.note_height_offset = 0
 
-        self.settings = config.load_settings()  # โหลดการตั้งค่าจาก config
-        self.note_speed = self.settings.get("note_speed", 300)  # ใช้ note_speed ที่ตั้งไว้
+        self.settings = config.load_settings()
+        self.note_speed = self.settings.get("note_speed")  # ความเร็วของโน้ตที่ลงมา
 
         self.messege_display_time = 0
         self.messege_duration = 1.5
 
         self.clock = pygame.time.Clock()
 
+        # กำหนดค่าเริ่มต้นให้กับ lane และ spawn_time
         self.lane = 0  # กำหนดให้เริ่มจากเลนที่ 0
         self.spawn_time = time.time()  # เริ่มต้นเวลา spawn_time ใช้เวลาปัจจุบัน (หรือใช้ค่าที่เหมาะสม)
 
-        # สร้างโน้ตใหม่ที่กำหนด lane และ spawn_time พร้อมกับ note_speed ที่ปรับจาก settings
-        self.Note = Note(self.lane, self.spawn_time, self.hit_line_y, note_speed=self.note_speed)
+        # สร้างโน้ตใหม่ที่กำหนด lane และ spawn_time
+        self.Note = Note(self.lane, self.spawn_time, self.hit_line_y, duration=None)
 
         self.notes = []  # รายการโน้ตที่กำหนดขึ้น
         self.score = 0 
@@ -114,6 +116,7 @@ class Gameplay:
         self.good_hits = 0  
         self.bad_hits = 0  
 
+
     def load_notes(self, file_name):
         """โหลดโน้ตจากไฟล์"""
         with open(file_name, "r") as f:
@@ -125,9 +128,10 @@ class Gameplay:
                 lane = int(parts[0])  # เลนที่โน้ตจะไป
                 spawn_time = float(parts[1])  # เวลาที่โน้ตจะปรากฏ
 
-                # สร้างโน้ตใหม่พร้อมกับ hit_lane_y และ note_speed
-                self.notes.append(Note(lane, spawn_time, self.hit_line_y, note_speed=self.note_speed))  # ส่ง note_speed ไปให้ Note
+                # สร้างโน้ตใหม่พร้อมกับ hit_lane_y
+                self.notes.append(Note(lane, spawn_time, self.hit_line_y))  # ส่ง hit_line_y ไปให้ Note
                 self.total_notes += 1
+
 
     def handle_input(self, keys, current_time):
         """จัดการกับการกดปุ่มและตรวจสอบการตีโน้ต"""
@@ -138,28 +142,24 @@ class Gameplay:
         if self.paused:  # ถ้าเกมหยุดชั่วคราว
             return
 
+        # ตรวจสอบว่า key_bindings มีอยู่ใน self.game.gameplay หรือไม่
+        if not hasattr(self.game.gameplay, 'key_bindings'):
+            print("Error: key_bindings not found!")
+            return  # ไม่ทำอะไรถ้าไม่มี key_bindings
+
         key_bindings = self.game.gameplay.key_bindings  # ดึง key_bindings จาก gameplay
 
+        # ตรวจสอบว่า key_bindings มีค่าเป็น dictionary หรือไม่
+        if not isinstance(key_bindings, dict):
+            print("Error: key_bindings is not a dictionary!")
+            return  # หากไม่ใช่ dictionary ให้หยุดการทำงาน
+
+        # ลูปผ่านโน้ตทั้งหมด
         for note in self.notes[:]:  
             for i, tolerance in enumerate(hit_tolerances):  # ตรวจสอบแต่ละระดับของการตีโน้ต
                 if note.is_hit(keys, tolerance, key_bindings):  # ส่ง key_bindings ให้ฟังก์ชัน is_hit()
                     self.register_hit(note, points[i], hit_messages[i])
                     break
-
-    def register_hit(self, note, points, hit_message):
-        """ลงทะเบียนการตีโน้ต"""
-        self.score += points  # เพิ่มคะแนนตามประเภทของการตี
-        self.combo += 1  # เพิ่มคอมโบ
-        self.hit_notes += 1  # เพิ่มจำนวนโน้ตที่ถูกตี
-        if hit_message == "Perfect!":
-            self.perfect_hits += 1
-        elif hit_message == "Good!":
-            self.good_hits += 1
-        elif hit_message == "Bad!":
-            self.bad_hits += 1
-        self.notes.remove(note)  # ลบโน้ตที่ตีแล้วออกจากรายการ
-        self.message = hit_message  # เก็บข้อความที่จะแสดง
-        self.message_display_time = time.time()  # ตั้งเวลาแสดงข้อความ
 
     def register_hit(self, note, points, hit_message):
         """ลงทะเบียนการตีโน้ต"""
@@ -268,9 +268,6 @@ class Gameplay:
         self.good_hits = 0
         self.bad_hits = 0
         self.missed_notes = 0
-        # Reload notes and reset other gameplay-specific settings
-        pygame.mixer.music.load(f'songs/SONG{self.song_index}.mp3')
-        pygame.mixer.music.play()  # Restart the music
         self.show()
 
     def toggle_pause(self):
@@ -373,10 +370,10 @@ class Gameplay:
        
     def show(self):
         """ลูปหลักของเกม"""
-        self.load_notes(f"Notes/SONG{self.current_song_index}.txt")
-        pygame.mixer.music.load(f'songs/SONG{self.current_song_index}.mp3')
+        self.load_notes(f"Notes/SONG{self.song_index}.txt")
+        pygame.mixer.music.load(f'songs/SONG{self.song_index}.mp3')
         pygame.mixer.music.play()
-        print(f"Notes/SONG{self.current_song_index}.txt")
+        print(f"Notes/SONG{self.song_index}.txt")
         
         start_time = time.time()
 
@@ -409,7 +406,3 @@ class Gameplay:
 
             pygame.display.flip()
             self.clock.tick(60)
-
-
-
-

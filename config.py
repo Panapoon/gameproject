@@ -46,7 +46,6 @@ def load_settings():
         print("No settings file found, using default settings.")
         return {
             "volume": 1.0,
-            "note_speed": 1.0,
             "key_bindings": {
                 "D": pygame.K_d,
                 "F": pygame.K_f,
@@ -58,7 +57,6 @@ def load_settings():
         print(f"Error loading settings: {e}")
         return {
             "volume": 1.0,
-            "note_speed": 1.0,
             "key_bindings": {
                 "D": pygame.K_d,
                 "F": pygame.K_f,
