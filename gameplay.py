@@ -154,6 +154,7 @@ class Gameplay:
         self.screen = self.game.screen
         self.key_bindings = game.option.key_bindings
         self.song_index = song_index
+        self.select_song = SelectSong(self)
 
         self.hit_sound = pygame.mixer.Sound("Notes/Hit_Sound.mp3")
         self.hit_sound.set_volume(0.2)
@@ -360,6 +361,8 @@ class Gameplay:
                         quit()
 
     def reset_game(self):
+        self.fade(fade_out=True)  # เริ่ม fade out
+        self.fade(fade_out=False)  # เริ่ม fade in       
         self.notes = []  # Clear the list of notes
         self.score = 0
         self.combo = 0
@@ -376,6 +379,7 @@ class Gameplay:
         self.bad_hits = 0
         self.missed_notes = 0
         self.show()
+
 
     def toggle_pause(self):
         """ฟังก์ชั่นที่ใช้สำหรับการหยุดหรือเล่นเพลงเมื่อเกมหยุดชั่วคราว"""
@@ -397,28 +401,24 @@ class Gameplay:
                 button.color = config.WHITE  # Default color
 
     def display_pause_menu(self):
-       
         """แสดงเมนู pause ขณะที่เกมหยุดชั่วคราว"""
         self.screen.fill(config.BLACK)
         
-        # Get the current mouse position (used for hover effects)
         mouse_pos = pygame.mouse.get_pos()
-        
+
         # Font for text
         font = pygame.font.Font(config.FONT1, 150)
-        
+
         # Create buttons using the Button class
-        resume_button = config.Button("Resume", 40, int(self.WIDTH * 0.5), int(self.HEIGHT * 0.4) - 50, 300, 80, config.WHITE, 255)
-        restart_button = config.Button("Restart", 40, int(self.WIDTH * 0.5), int(self.HEIGHT * 0.5) + 50, 300, 80, config.WHITE, 255)
-        menu_button = config.Button("To Menu", 40, int(self.WIDTH * 0.5), int(self.HEIGHT * 0.6) + 150, 300, 80, config.WHITE, 255)
-        mouse_click = pygame.mouse.get_pressed()
-        mouse_pos = pygame.mouse.get_pos()
+        menu_button = config.Button("To Menu", 40, int(self.WIDTH * 0.5), int(self.HEIGHT * 0.4) - 50, 300, 80, config.WHITE, 255)
+        resume_button = config.Button("Resume", 40, int(self.WIDTH * 0.5), int(self.HEIGHT * 0.5) + 50, 300, 80, config.WHITE, 255)
+        restart_button = config.Button("Restart", 40, int(self.WIDTH * 0.5), int(self.HEIGHT * 0.6) + 150, 300, 80, config.WHITE, 255)
 
         # Draw the buttons and update hover effects
         resume_button.draw(self.screen, mouse_pos)
         restart_button.draw(self.screen, mouse_pos)
         menu_button.draw(self.screen, mouse_pos)
-        
+
         # Draw the "Game Paused" text with shadow
         pause_surface = font.render("Game Paused", True, config.WHITE)
         pause_rect = pause_surface.get_rect(center=(self.WIDTH // 2, self.HEIGHT // 7))
@@ -429,49 +429,75 @@ class Gameplay:
         self.screen.blit(shadow_surface, shadow_rect)
         self.screen.blit(pause_surface, pause_rect)
 
-        # Update the display once, after all drawing
-        pygame.display.flip()
+        pygame.display.flip()  # Update the display
 
-        # Handling mouse events (hover and click)
+        # Handle mouse events (clicking on buttons)
         waiting = True
         while waiting:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     quit()
-                
+
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
-                    
+
                     # Check if any button was clicked using collidepoint
-                    if resume_button.rect.collidepoint(mouse_pos):  # Using collidepoint directly
-                        self.toggle_pause()  # Or whatever action is associated with this button
+                    if resume_button.rect.collidepoint(mouse_pos):  # Resume
+                        self.toggle_pause()
                         waiting = False
-                    elif restart_button.rect.collidepoint(mouse_pos):  # Using collidepoint directly
-                        self.reset_game() 
+                    elif restart_button.rect.collidepoint(mouse_pos):  # Restart
+                        self.reset_game()
                         waiting = False
-                    elif  menu_button.is_clicked(mouse_pos, mouse_click):
+                    elif menu_button.rect.collidepoint(mouse_pos):  # To Menu
+                        # Fade-out, then switch to the menu, then fade-in
+                        self.fade(fade_out=True) 
+                        waiting = False  
                         return "select_song"
-                    
+
+                        
                 elif event.type == pygame.MOUSEMOTION:
-                    # Highlight buttons on hover by changing their color when hovered
+                    # Highlight buttons on hover
                     if resume_button.rect.collidepoint(event.pos):
-                        resume_button.color = (200, 200, 255)  # Highlight color when hovered
+                        resume_button.color = (200, 200, 255)
                     else:
-                        resume_button.color = config.WHITE  # Default color
+                        resume_button.color = config.WHITE
 
                     if restart_button.rect.collidepoint(event.pos):
-                        restart_button.color = (200, 200, 255)  # Highlight color when hovered
+                        restart_button.color = (200, 200, 255)
                     else:
-                        restart_button.color = config.WHITE  # Default color
+                        restart_button.color = config.WHITE
 
                     if menu_button.rect.collidepoint(event.pos):
-                        menu_button.color = (200, 200, 255)  # Highlight color when hovered
+                        menu_button.color = (200, 200, 255)
                     else:
-                        menu_button.color = config.WHITE  # Default color
+                        menu_button.color = config.WHITE
 
-            # Only update the display once after all handling is done
             pygame.display.flip()
+
+
+    def fade(self, fade_out=True, speed=5):
+        """สร้างเอฟเฟกต์ Fade (เข้าหรือออก)"""
+        fade_surface = pygame.Surface((self.WIDTH, self.HEIGHT))
+        fade_surface.fill((0, 0, 0))  # เติมสีดำ
+        alpha = 0 if fade_out else 255  # ตั้งค่า alpha เริ่มต้น
+
+        # กำหนดให้สีมีความทึบ (alpha) ตั้งแต่ 0 (โปร่งใส) ถึง 255 (ทึบสุด)
+        if fade_out:
+            while alpha < 255:
+                alpha += speed
+                fade_surface.set_alpha(alpha)
+                self.screen.blit(fade_surface, (0, 0))
+                pygame.display.flip()
+                self.clock.tick(60)
+        else:
+            while alpha > 0:
+                alpha -= speed
+                fade_surface.set_alpha(alpha)
+                self.screen.blit(fade_surface, (0, 0))
+                pygame.display.flip()
+                self.clock.tick(60)
+    
 
     def show(self):
         """ลูปหลักของเกม"""
@@ -481,42 +507,71 @@ class Gameplay:
         start_time = time.time()
         background_image = pygame.image.load(f'picture/BACKGROUND/BG{self.song_index}.png')
         background_image = pygame.transform.scale(background_image, (self.WIDTH, self.HEIGHT))
-        self.screen.blit(background_image, (0, 0))
-
+        
+        # สร้าง overlay ที่มีความโปร่งใส
         overlay = pygame.Surface((self.WIDTH, self.HEIGHT))
         overlay.set_alpha(128)
         overlay.fill((0, 0, 0))
+        
+        # เริ่มต้นด้วยการวาดพื้นหลังและ overlay
+        self.screen.blit(background_image, (0, 0))
         self.screen.blit(overlay, (0, 0))
+
+        # กำหนดสถานะ paused และตัวแปร music_played
+        self.paused = False
+        music_played = False  # ตัวแปรเพื่อให้เพลงเล่นแค่ครั้งเดียว
 
         while True:
             current_time = time.time() - start_time
-            self.screen.blit(background_image, (0, 0))
-            self.screen.blit(overlay, (0, 0))
-            
-            if 2.7 <= current_time <= 2.9:
+
+            # ถ้าถึงเวลาที่กำหนดให้เล่นเพลง
+            if not music_played and 2.7 <= current_time <= 2.9:
                 pygame.mixer.music.load(f'songs/SONG{self.song_index}.mp3')
                 pygame.mixer.music.play()
+                music_played = True  # ตั้งค่าให้ไม่เล่นเพลงซ้ำ
 
+            # วาดพื้นหลังและ overlay ทุกเฟรม
+            self.screen.blit(background_image, (0, 0))
+            self.screen.blit(overlay, (0, 0))
+
+            # การจัดการอีเวนต์
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
+                     running = False
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:  # กด ESC เพื่อหยุดหรือเล่นเกม
-                        self.toggle_pause()  # เรียกใช้ฟังก์ชั่น toggle_pause
-                        
-                    
-            if self.paused:
-                self.display_pause_menu()  # เมื่อเกมหยุด ให้แสดงเมนู pause
-                continue  # ข้ามการอัปเดตเกม
+                        self.toggle_pause()
+                        self.paused = True # สลับสถานะ paused
 
-            keys = pygame.key.get_pressed()
-            self.handle_input(keys, current_time)
+            # ถ้าเกมถูกหยุด (paused) จะแสดงเมนู Pause
+                if self.paused:
+                    result = self.display_pause_menu()
+                    if result == "select_song":
+                        song_result, song_index = self.game.select_song.show()
+                        if song_result == "gameplay":
+                            self.song_index = song_index  # เลือกเพลงใหม่
+                            self.paused = False  # ปิดสถานะ paused
+                            return "select_song"  # ส่งผลให้กลับไปที่หน้าเลือกเพลง
+                        elif song_result == "title":
+                            return "title"
+                    elif result == "resume":
+                        self.paused = False
+                        continue  # กลับไปเล่นเกม
+            
+            # ถ้าเกมไม่ได้หยุด (ไม่ได้อยู่ในสถานะ paused) ให้ทำการอัปเดตสถานะต่างๆ
+            if not self.paused:
+                keys = pygame.key.get_pressed()
+                self.handle_input(keys, current_time)
 
-            self.draw_chart()
-            self.draw_notes(current_time)
-            self.display_message()
-            self.display_score()
-            self.display_accuracy()
+                # ฟังก์ชันการวาดต่างๆ
+                self.draw_chart()
+                self.draw_notes(current_time)
+                self.display_message()
+                self.display_score()
+                self.display_accuracy()
 
+            # อัปเดตการแสดงผล
             pygame.display.flip()
+
+            # ควบคุมอัตราเฟรมให้คงที่ที่ 60 fps
             self.clock.tick(60)
