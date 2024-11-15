@@ -4,36 +4,33 @@ from pygame import mixer
 import config
 from select_song import *
 from option import *
+import SongNoteGen
 
 class Note:
-    def __init__(self, lane, spawn_time, hit_lane_y, duration=None):
+    def __init__(self, screen, lane, spawn_time, hit_lane_y, note_speed=300):
         self.WIDTH, self.HEIGHT = 1920, 1080
-        self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT), pygame.FULLSCREEN)
+        self.screen = screen
         self.lane = lane
+        self.screen = screen
         self.spawn_time = spawn_time
         self.hit_lane_y = hit_lane_y  # รับค่า hit_lane_y จากภายนอก
-        self.duration = duration
         self.hit = False
-        self.note_speed = 300
+        self.note_speed = note_speed*300 # รับ note_speed จากภายนอก
         self.note_color = (0, 255, 0)
         self.lane_width = self.WIDTH / 8
-        self.center_offset = (self.WIDTH - (self.lane_width * 4)) / 2
-        self.hit_line_y = self.HEIGHT - 50  # จุดที่จะตีโน้ต
+        self.hit_line_y = self.HEIGHT - 150  # จุดที่จะตีโน้ต
         self.note_height_offset = 0
         self.y_position = 0
 
     def update_position(self, current_time):
         self.elapsed = current_time - self.spawn_time
-        self.y_position = self.elapsed * self.note_speed
+        self.y_position = self.elapsed * self.note_speed  # ใช้ note_speed ในการอัปเดตตำแหน่ง
 
     def draw(self):
         if self.y_position <= self.HEIGHT:
-            # คำนวณตำแหน่ง x โดยใช้ center offset
-            x_position = self.lane * self.lane_width + self.lane_width // 2 + self.center_offset
-            pygame.draw.circle(self.screen, self.note_color, 
-                               (int(x_position), int(self.y_position)), 30)
+            pygame.draw.circle(self.screen, self.note_color, (self.lane * self.lane_width + self.lane_width // 2 + self.WIDTH // 4, int(self.y_position)), 50)
 
-    def is_hit(self, keys, offset_tolerance, key_bindings):
+    def check_hit(self, keys, offset_tolerance, key_bindings):
         """Check if the note is hit by checking the offset tolerance and key press."""
         
         # Return early if the note has already been hit
@@ -62,6 +59,92 @@ class Note:
         
         return False
 
+class Long_Note:
+    def __init__(self, screen, lane, spawn_time, duration,  hit_lane_y, note_speed=300):
+        self.WIDTH, self.HEIGHT = 1920, 1080
+        self.screen = screen
+        self.lane = lane
+        self.screen = screen
+        self.spawn_time = spawn_time
+        self.hit_lane_y = hit_lane_y  # รับค่า hit_lane_y จากภายนอก
+        self.duration = duration
+        self.hit = False
+        self.note_speed = note_speed * 300 # รับ note_speed จากภายนอก
+        self.note_color = (0, 255, 0)
+        self.lane_width = self.WIDTH / 8
+        self.hit_line_y = self.HEIGHT - 150  # จุดที่จะตีโน้ต
+        self.note_height_offset = 0
+        self.y_position = 0
+        self.is_pressed = False
+        self.is_hit = False
+        self.hit_rect = None
+        self.last_hit_time = 0
+
+    def update_position(self, current_time):
+        self.elapsed_start = current_time - self.spawn_time
+        self.elapsed_end = current_time - self.duration
+        self.y_position_start = self.elapsed_start * self.note_speed  # ใช้ note_speed ในการอัปเดตตำแหน่ง
+        self.y_position_end = self.elapsed_end * self.note_speed
+
+        lane_x = self.lane * self.lane_width + self.lane_width // 2
+        if 0 <= self.y_position_start <= self.HEIGHT:
+            self.hit_rect = pygame.Rect(lane_x - 10, self.y_position_start - 20, 20, 40)  # ตัวอย่างขนาด hit_rect
+
+    def draw(self):
+        lane_x = self.lane * self.lane_width + self.lane_width // 2 + self.WIDTH // 4  # ตำแหน่ง x ของเลน
+
+        # วาดวงกลมที่จุดเริ่มต้นของโน้ตยาว (ต้นโน้ต)
+        if 0 <= self.y_position_start <= self.HEIGHT:
+            pygame.draw.circle(self.screen, self.note_color, (lane_x, self.y_position_start), 50)
+        
+        # วาดสี่เหลี่ยมเพื่อแสดงระยะความยาว duration ของโน้ตยาว
+        if 0 <= self.y_position_start <= self.HEIGHT or self.y_position_end > 0:
+            y_top = min(self.y_position_start, self.y_position_end)
+            y_bottom = max(self.y_position_start, self.y_position_end)
+
+            if y_bottom > self.HEIGHT:
+                y_bottom = self.HEIGHT
+
+            pygame.draw.rect(self.screen, self.note_color, (lane_x - 25, int(y_top), 50, int(y_bottom - y_top)))
+        
+        # วาดวงกลมที่จุดสิ้นสุดของโน้ตยาว (ปลายโน้ต)
+        if 0 <= self.y_position_end <= self.HEIGHT:
+            pygame.draw.circle(self.screen, self.note_color, (lane_x, int(self.y_position_end)), 50)
+
+    def check_hit(self, keys, offset_tolerance, key_bindings, current_time):
+        """Check if the long note is hit by checking the offset tolerance, key press, and note duration."""
+
+        # Return early if the note has already been hit or is released
+        if self.is_pressed or self.is_hit:
+            return False
+
+        # Check if the key is still pressed at the start of the long note
+        custom_keys = [key_bindings.get(action) for action in ["D", "F", "K", "L"]]
+
+        if 0 <= self.lane < len(custom_keys):
+            key_to_check = custom_keys[self.lane]
+
+            # Ensure key_to_check is not None and that the corresponding key is pressed
+            if key_to_check is not None and keys[key_to_check]:
+                # Ensure the key is pressed at the start of the note
+                if 0 <= self.y_position_start <= self.HEIGHT:
+                    # ตรวจสอบว่ากดค้างที่จุดเริ่มต้นหรือไม่
+                    if not self.is_pressed:
+                        if self.hit_rect.collidepoint(self.lane * self.lane_width + self.lane_width // 2, self.hit_line_y):
+                            self.is_pressed = True
+                            self.is_hit = True  # Mark the note as hit
+
+                            # Register hit every 1 second while the key is pressed
+                            if current_time - self.last_hit_time >= 1:  # Every 1 second
+                                self.last_hit_time = current_time
+                                return True
+
+        # หากมือถูกปล่อยออกจากปุ่มหรือโน้ตไม่ตรงกับเงื่อนไข ไม่ให้กดที่เส้นระหว่างและจุดปลาย
+        if not keys[key_to_check] and self.is_pressed:
+            self.is_pressed = False  # กดปล่อยมือแล้วให้กลับมาเป็น False
+            return False
+
+        return False
 
 
 class Gameplay:
@@ -70,10 +153,8 @@ class Gameplay:
         self.WIDTH, self.HEIGHT = self.game.WIDTH, self.game.HEIGHT
         self.screen = self.game.screen
         self.key_bindings = game.option.key_bindings
-        # กำหนด song_index ที่ได้รับมา
         self.song_index = song_index
 
-        # โหลด hit sound
         self.hit_sound = pygame.mixer.Sound("Notes/Hit_Sound.mp3")
         self.hit_sound.set_volume(0.2)
         
@@ -86,36 +167,23 @@ class Gameplay:
         else:
             self.song = None  # หรือสามารถจัดการกับกรณีนี้เพิ่มเติม
         
-        self.background_images = []
-        for i in range(len(config.songLIST)):  # แก้ไขให้ตรงกับจำนวนเพลงที่มี
-            image_path = f"picture/BACKGROUND/BGB{i+1}.png"
-            try:
-                # โหลดและเพิ่มภาพพื้นหลัง
-                self.background_images.append(pygame.transform.scale(pygame.image.load(image_path), (self.WIDTH, self.HEIGHT)))
-            except pygame.error as e:
-                print(f"Error loading image {image_path}: {e}")
-
         self.lane_width = self.WIDTH / 8
-        self.center_offset = (self.WIDTH - (self.lane_width * 4)) / 2
-        self.hit_line_y = self.HEIGHT - 50  # จุดที่จะตีโน้ต
+        self.hit_line_y = self.HEIGHT - 150  # จุดที่จะตีโน้ต
         self.note_height_offset = 0
 
-        self.settings = config.load_settings()
-        self.note_speed = self.settings.get("note_speed")  # ความเร็วของโน้ตที่ลงมา
+        self.settings = config.load_settings()  # โหลดการตั้งค่าจาก config
+        self.note_speed = self.settings.get("note_speed", 300)  # ใช้ note_speed ที่ตั้งไว้
 
         self.messege_display_time = 0
         self.messege_duration = 1.5
 
         self.clock = pygame.time.Clock()
 
-        # กำหนดค่าเริ่มต้นให้กับ lane และ spawn_time
         self.lane = 0  # กำหนดให้เริ่มจากเลนที่ 0
         self.spawn_time = time.time()  # เริ่มต้นเวลา spawn_time ใช้เวลาปัจจุบัน (หรือใช้ค่าที่เหมาะสม)
 
-        # สร้างโน้ตใหม่ที่กำหนด lane และ spawn_time
-        self.Note = Note(self.lane, self.spawn_time, self.hit_line_y, duration=None)
-
         self.notes = []  # รายการโน้ตที่กำหนดขึ้น
+        self.long_notes = []
         self.score = 0 
         self.combo = 0  
         self.hit_notes = 0 
@@ -132,22 +200,21 @@ class Gameplay:
         self.good_hits = 0  
         self.bad_hits = 0  
 
-
     def load_notes(self, file_name):
         """โหลดโน้ตจากไฟล์"""
         with open(file_name, "r") as f:
             for line in f:
                 parts = line.strip().split(",")  # แยกข้อมูลที่ใช้คั่นด้วยเครื่องหมายจุลภาค
-                if len(parts) != 2:
-                    print(f"Skipping invalid line: {line.strip()}")  # ข้ามบรรทัดที่ไม่ถูกต้อง
-                    continue
                 lane = int(parts[0])  # เลนที่โน้ตจะไป
-                spawn_time = float(parts[1])  # เวลาที่โน้ตจะปรากฏ
-
-                # สร้างโน้ตใหม่พร้อมกับ hit_lane_y
-                self.notes.append(Note(lane, spawn_time, self.hit_line_y))  # ส่ง hit_line_y ไปให้ Note
+                spawn_time = float(parts[1]) # เวลาที่โน้ตจะปรากฏ
+                if len(parts) == 2:
+                    self.notes.append(Note(self.screen, lane, spawn_time, self.hit_line_y, note_speed=self.note_speed)) 
+                elif len(parts) == 3:
+                    duration = float(parts[2])
+                    self.long_notes.append(Long_Note(self.screen, lane, spawn_time, duration, self.hit_line_y, note_speed=self.note_speed))  
+                else:
+                    print("Error load_notes")
                 self.total_notes += 1
-
 
     def handle_input(self, keys, current_time):
         """จัดการกับการกดปุ่มและตรวจสอบการตีโน้ต"""
@@ -158,32 +225,22 @@ class Gameplay:
         if self.paused:  # ถ้าเกมหยุดชั่วคราว
             return
 
-        # ตรวจสอบว่า key_bindings มีอยู่ใน self.game.gameplay หรือไม่
-        if not hasattr(self.game.gameplay, 'key_bindings'):
-            print("Error: key_bindings not found!")
-            return  # ไม่ทำอะไรถ้าไม่มี key_bindings
-
         key_bindings = self.game.gameplay.key_bindings  # ดึง key_bindings จาก gameplay
 
-        # ตรวจสอบว่า key_bindings มีค่าเป็น dictionary หรือไม่
-        if not isinstance(key_bindings, dict):
-            print("Error: key_bindings is not a dictionary!")
-            return  # หากไม่ใช่ dictionary ให้หยุดการทำงาน
-
-        # ลูปผ่านโน้ตทั้งหมด
         for note in self.notes[:]:  
             for i, tolerance in enumerate(hit_tolerances):  # ตรวจสอบแต่ละระดับของการตีโน้ต
-                if note.is_hit(keys, tolerance, key_bindings):  # ส่ง key_bindings ให้ฟังก์ชัน is_hit()
+                if note.check_hit(keys, tolerance, key_bindings):  # ส่ง key_bindings ให้ฟังก์ชัน is_hit()
                     self.register_hit(note, points[i], hit_messages[i])
                     break
 
-    def show_hit_flash(self, x_position, y_position):
-        """แสดงแฟลชที่จุดที่โน้ตถูกตี"""
-        flash_color = (255, 255, 255)
-        for radius in range(10, 30, 5):
-            pygame.draw.circle(self.screen, flash_color, (x_position, y_position), radius, 2)
+        for long_note in self.long_notes[:]:  
+            for i, tolerance in enumerate(hit_tolerances):  # ตรวจสอบแต่ละระดับของการตีโน้ต
+                if long_note.check_hit(keys, tolerance, key_bindings, current_time):  # ส่ง key_bindings ให้ฟังก์ชัน is_hit()
+                    self.register_hit(note, points[i], hit_messages[i])
+                    break
 
     def register_hit(self, note, points, hit_message):
+        """ลงทะเบียนการตีโน้ต"""
         self.score += points  # เพิ่มคะแนนตามประเภทของการตี
         self.combo += 1  # เพิ่มคอมโบ
         self.hit_notes += 1  # เพิ่มจำนวนโน้ตที่ถูกตี
@@ -219,13 +276,17 @@ class Gameplay:
         self.screen.blit(accuracy_text, (10, 90))  # แสดงที่มุมซ้ายบน
 
     def draw_chart(self):
-        """วาดเส้นที่ใช้แบ่งเลนสำหรับการเล่นเกม และเพิ่มเส้นขอบด้านขวาสำหรับเลนสุดท้าย"""
+        """วาดเส้นที่ใช้แบ่งเลนสำหรับการเล่นเกม"""
+        for i in range(5):
+            pygame.draw.line(self.screen, config.WHITE, (i * self.lane_width + self.WIDTH // 4, 0), (i * self.lane_width+ self.WIDTH // 4, self.HEIGHT), 2)
         for i in range(4):
-            pygame.draw.line(self.screen, config.WHITE, (i * self.lane_width + self.center_offset, 0), (i * self.lane_width + self.center_offset, self.HEIGHT), 2)
-        # เพิ่มเส้นขอบด้านขวาสำหรับเลนที่ 4
-        pygame.draw.line(self.screen, config.WHITE, (self.center_offset + 4 * self.lane_width, 0), (self.center_offset + 4 * self.lane_width, self.HEIGHT), 2)
-        # วาดเส้นที่ตำแหน่งตีโน้ต
-        pygame.draw.line(self.screen, config.WHITE, (self.center_offset, self.hit_line_y), (self.center_offset + 4 * self.lane_width, self.hit_line_y), 2)
+            circle_surface = pygame.Surface((100, 100), pygame.SRCALPHA)  
+            circle_surface = circle_surface.convert_alpha()  
+
+            pygame.draw.circle(circle_surface, (255, 255, 255, 255), (50, 50), 50) 
+            pygame.draw.circle(circle_surface, (0, 0, 0, 0), (50, 50), 45)  
+
+            self.screen.blit(circle_surface, (i * self.lane_width + self.lane_width // 2 + self.WIDTH // 4 - 50, int(self.hit_line_y) - 50))
 
     def draw_notes(self, current_time):
         """วาดโน้ตทั้งหมดและอัปเดตตำแหน่งของโน้ต"""
@@ -235,6 +296,13 @@ class Gameplay:
             if note.y_position > self.HEIGHT and not note.hit:
                 self.combo = 0  # รีเซ็ตคอมโบเมื่อโน้ตพลาด
                 self.register_miss(note)  # ลงทะเบียนการพลาด
+        
+        for long_note in self.long_notes[:]:
+            long_note.update_position(current_time)  # อัปเดตตำแหน่งของโน้ต
+            long_note.draw()  # วาดโน้ต
+            if long_note.y_position > self.HEIGHT and not long_note.hit:
+                self.combo = 0  # รีเซ็ตคอมโบเมื่อโน้ตพลาด
+                self.register_miss(long_note)  # ลงทะเบียนการพลาด
 
     def display_message(self):
         if self.message and (time.time() - self.message_display_time) < self.message_duration:
@@ -263,6 +331,8 @@ class Gameplay:
         combo_text = font.render(f"Combo: {self.combo}", True, config.WHITE)
         self.screen.blit(score_text, (10, 10))  # แสดงคะแนนที่มุมซ้ายบน
         self.screen.blit(combo_text, (10, 50))  # แสดงคอมโบที่มุมซ้ายบน
+
+     
 
     def show_restart_or_exit(self):
         """แสดงตัวเลือกให้ผู้เล่นเลือกว่าจะเล่นใหม่หรือออก"""
@@ -305,6 +375,10 @@ class Gameplay:
         self.good_hits = 0
         self.bad_hits = 0
         self.missed_notes = 0
+        # Reload notes and reset other gameplay-specific settings
+        pygame.mixer.music.load(f'songs/SONG{self.song_index}.mp3')
+        pygame.mixer.music.play()  # Restart the music
+        self.show()
 
     def toggle_pause(self):
         """ฟังก์ชั่นที่ใช้สำหรับการหยุดหรือเล่นเพลงเมื่อเกมหยุดชั่วคราว"""
@@ -315,16 +389,7 @@ class Gameplay:
             pygame.mixer.music.pause()  # ถ้าเกมหยุดก็ให้เพลงหยุด
             self.paused = True
     
-    def draw_combo_effects(self):
-        """Draw effects for high combo counts."""
-        if self.combo >= 10:  # Only start effects if combo is high
-            color_intensity = min(255, self.combo * 10)  # Intensity based on combo count
-            color = (255, color_intensity, color_intensity)  # Red-ish color based on combo
-            effect_radius = min(100, self.combo * 3)  # Increase radius with combo
-            
-            pygame.draw.circle(self.screen, color, 
-                            (self.WIDTH // 2, self.hit_line_y), 
-                            effect_radius, 5)
+    
      
     def update_button_colors(self, buttons, mouse_pos):
         """อัพเดตสีของปุ่มเมื่อเมาส์เคลื่อนที่เข้าไป"""
@@ -411,35 +476,41 @@ class Gameplay:
             # Only update the display once after all handling is done
             pygame.display.flip()
 
-        
-       
     def show(self):
         """ลูปหลักของเกม"""
-        self.load_notes(f"Notes/SONG{self.song_index}.txt")
-        pygame.mixer.music.load(f'songs/SONG{self.song_index}.mp3')
-        pygame.mixer.music.play()
-        print(f"Notes/SONG{self.song_index}.txt")
+        SongNoteGen.analyze_song(self.song_index)
+        self.load_notes(f"Notes/song_note.txt")
         
         start_time = time.time()
-        running = True
-        while running:
+        background_image = pygame.image.load(f'picture/BACKGROUND/BG{self.song_index}.png')
+        background_image = pygame.transform.scale(background_image, (self.WIDTH, self.HEIGHT))
+        self.screen.blit(background_image, (0, 0))
+
+        overlay = pygame.Surface((self.WIDTH, self.HEIGHT))
+        overlay.set_alpha(128)
+        overlay.fill((0, 0, 0))
+        self.screen.blit(overlay, (0, 0))
+
+        while True:
             current_time = time.time() - start_time
-
-            # วาดภาพพื้นหลังตาม song_index
-            if 0 <= self.song_index - 1 < len(self.background_images):
-                self.screen.blit(self.background_images[self.song_index - 1], (0, 0))
-
+            self.screen.blit(background_image, (0, 0))
+            self.screen.blit(overlay, (0, 0))
+            
+            if 2.7 <= current_time <= 2.9:
+                pygame.mixer.music.load(f'songs/SONG{self.song_index}.mp3')
+                pygame.mixer.music.play()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        self.toggle_pause()
-
+                    if event.key == pygame.K_ESCAPE:  # กด ESC เพื่อหยุดหรือเล่นเกม
+                        self.toggle_pause()  # เรียกใช้ฟังก์ชั่น toggle_pause
+                        
+                    
             if self.paused:
-                self.display_pause_menu()
-                continue
+                self.display_pause_menu()  # เมื่อเกมหยุด ให้แสดงเมนู pause
+                continue  # ข้ามการอัปเดตเกม
 
             keys = pygame.key.get_pressed()
             self.handle_input(keys, current_time)

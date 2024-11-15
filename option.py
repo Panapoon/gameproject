@@ -24,9 +24,12 @@ class Options:
         self.font = pygame.font.Font(config.FONT1, int(120))  # แปลงเป็น int เพื่อป้องกันข้อผิดพลาด
 
         # ปุ่มปรับเสียง
-        self.volume_left_button = config.Button("-", 40, int(self.WIDTH * 0.2), int(self.HEIGHT * 0.52), 100, 80, config.RED, 255)
-        self.volume_right_button = config.Button("+", 40, int(self.WIDTH * 0.8), int(self.HEIGHT * 0.52), 100, 80, config.GREEN, 255)
+        self.volume_left_button = config.Button("-", 40, int(self.WIDTH * 0.2), int(self.HEIGHT * 0.3), 100, 80, config.RED, 255)
+        self.volume_right_button = config.Button("+", 40, int(self.WIDTH * 0.8), int(self.HEIGHT * 0.3), 100, 80, config.GREEN, 255)
 
+        # ปุ่มปรับความเร็วโน้ต
+        self.speed_left_button = config.Button("-", 40, int(self.WIDTH * 0.2), int(self.HEIGHT * 0.5), 100, 80, config.RED, 255)
+        self.speed_right_button = config.Button("+", 40, int(self.WIDTH * 0.8), int(self.HEIGHT * 0.5), 100, 80, config.GREEN, 255)
 
         # ปุ่มปรับ Key Blind
         self.key_blind_button = config.Button("Key Blind", 40, int(self.WIDTH * 0.5), int(self.HEIGHT * 0.8), 300, 80, config.GREEN, 255)
@@ -44,6 +47,7 @@ class Options:
 
         settings = config.load_settings()
         self.volume = settings.get("volume", 1.0)
+        self.note_speed = settings.get("note_speed", 1.0)
         self.key_bindings = settings.get("key_bindings", {
             "D": pygame.K_d,
             "F": pygame.K_f,
@@ -72,6 +76,8 @@ class Options:
             # วาดปุ่ม
             self.volume_left_button.draw(self.screen, mouse_pos)
             self.volume_right_button.draw(self.screen, mouse_pos)
+            self.speed_left_button.draw(self.screen, mouse_pos)
+            self.speed_right_button.draw(self.screen, mouse_pos)
             self.key_blind_button.draw(self.screen, mouse_pos)
             self.apply_button.draw(self.screen, mouse_pos)
             self.back_button1.draw(self.screen, mouse_pos)
@@ -87,7 +93,7 @@ class Options:
 
             # Volume
             volume_surface = self.font.render(f"Volume: {int(self.volume * 100)}%", True, config.BLACK)
-            volume_rect = volume_surface.get_rect(center=(self.WIDTH // 2 , int(0.4 * self.HEIGHT)))
+            volume_rect = volume_surface.get_rect(center=(self.WIDTH // 2 , int(0.3 * self.HEIGHT)))
             self.screen.blit(volume_surface, volume_rect)
 
             # Handle volume button clicks
@@ -97,48 +103,17 @@ class Options:
             if self.volume_right_button.is_clicked(mouse_pos, mouse_click):
                 self.volume = min(1.0, self.volume + 0.001)
                 pygame.mixer.music.set_volume(self.volume)
-            
-            # ขนาดของกราฟ slider
-            slider_width = 1000
-            slider_height = 40  # เพิ่มความสูงของกราฟ slider เพื่อให้มันใหญ่ขึ้น
 
-            # สร้าง rect สำหรับกรอบ slider (เพิ่มความกว้างเป็น 600 และความสูงเป็น 20)
-            slider_rect = pygame.Rect(self.WIDTH // 2 - slider_width // 2, self.HEIGHT // 2, slider_width, slider_height)
-            pygame.draw.rect(self.screen, (225, 225, 225), slider_rect)  # สีเทาสำหรับกรอบ slider
+            # Note speed
+            note_speed_surface = self.font.render(f"Note Speed: {int(self.note_speed * 100)}%", True, config.BLACK)
+            note_speed_rect = note_speed_surface.get_rect(center=(self.WIDTH // 2 , int(0.5 * self.HEIGHT)))
+            self.screen.blit(note_speed_surface, note_speed_rect)
 
-            # ขนาดของ knob (ตัวเลื่อน)
-            knob_size = 70 # ขนาดของ knob
-
-            # คำนวณตำแหน่งของ knob ในกรอบ slider โดยให้มันอยู่ตรงกลางกรอบ
-            # ใช้ self.volume เพื่อคำนวณตำแหน่งของ knob
-            knob_x = self.WIDTH // 2 - slider_width // 2 + self.volume * slider_width  # คำนวณตำแหน่งของ knob ตาม volume
-            knob_y = self.HEIGHT // 2 - knob_size // 2  # ทำให้ knob อยู่กลางในแนวตั้ง
-
-            # สร้าง rect สำหรับ knob โดยคำนวณจากตำแหน่ง knob_x และ knob_y
-            knob_rect = pygame.Rect(knob_x - knob_size // 2, knob_y+15, knob_size, knob_size)
-
-            # วาดวงกลม (knob) ที่ตำแหน่งที่คำนวณไว้
-            pygame.draw.circle(self.screen, config.BLACK, knob_rect.center, knob_size // 2)
-
-            # ตรวจสอบการคลิกที่ slider และปรับระดับเสียง
-            if mouse_click[0] and slider_rect.collidepoint(mouse_pos):
-                # คำนวณตำแหน่งของ mouse ในกราฟและปรับ volume
-                self.volume = (mouse_pos[0] - slider_rect.x+1) / slider_rect.width
-                self.volume = max(0.0, min(self.volume, 1.0))  # ตรวจสอบให้ volume อยู่ในช่วง 0 ถึง 1
-                pygame.mixer.music.set_volume(self.volume)
-
-            # ตรวจสอบการคลิกปุ่ม Apply
-            if self.apply_button.is_clicked(mouse_pos, mouse_click):
-                self.apply_settings()  # บันทึกการตั้งค่าทั้งหมด
-                break
-
-            # ตรวจสอบการคลิกปุ่ม Back
-            if self.back_button1.is_clicked(mouse_pos, mouse_click):
-                return "title"  # คืนค่าไปที่หน้าหลัก
-
-            pygame.display.flip()
-
-           
+            # การปรับความเร็วของโน้ตเมื่อกดปุ่ม
+            if self.speed_left_button.is_clicked(mouse_pos, mouse_click):
+                self.note_speed = max(0.1, self.note_speed - 0.001)  # ลดความเร็วโน้ต
+            if self.speed_right_button.is_clicked(mouse_pos, mouse_click):
+                self.note_speed = min(2.0, self.note_speed + 0.001)  # เพิ่มความเร็วโน้ต
 
             # ตรวจสอบการคลิกปุ่ม Apply
             if self.apply_button.is_clicked(mouse_pos, mouse_click):
@@ -234,6 +209,7 @@ class Options:
         # บันทึกการตั้งค่าทั้งหมด
         settings = {
             "volume": self.volume,
+            "note_speed": self.note_speed,
             "key_bindings": self.key_bindings  # บันทึก key bindings
         }
 
