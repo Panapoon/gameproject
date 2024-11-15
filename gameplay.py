@@ -375,9 +375,6 @@ class Gameplay:
         self.good_hits = 0
         self.bad_hits = 0
         self.missed_notes = 0
-        # Reload notes and reset other gameplay-specific settings
-        pygame.mixer.music.load(f'songs/SONG{self.song_index}.mp3')
-        pygame.mixer.music.play()  # Restart the music
         self.show()
 
     def toggle_pause(self):

@@ -249,7 +249,6 @@ class Options:
     def reset_settings(self):
         # รีเซ็ตการตั้งค่าเป็นค่าดีฟอลต์
         self.volume = 1.0
-        self.note_speed = 1.0
         self.key_bindings = {
             "D": pygame.K_d,
             "F": pygame.K_f,
