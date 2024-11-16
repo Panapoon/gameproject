@@ -5,6 +5,7 @@ import config
 from select_song import *
 from option import *
 import SongNoteGen
+from summary import *
 
 class Note:
     def __init__(self, screen, lane, spawn_time, hit_lane_y, note_speed=300):
@@ -156,7 +157,7 @@ class Gameplay:
         self.song_index = song_index
         self.select_song = SelectSong(self)
 
-        self.hit_sound = pygame.mixer.Sound("Notes/Hit_Sound.mp3")
+        self.hit_sound = pygame.mixer.Sound("songs/Hit_Sound.mp3")
         self.hit_sound.set_volume(0.2)
         
         # สร้างชื่อเพลงจาก song_index
@@ -199,7 +200,7 @@ class Gameplay:
         self.paused = False  
         self.perfect_hits = 0  
         self.good_hits = 0  
-        self.bad_hits = 0  
+        self.bad_hits = 0 
 
     def load_notes(self, file_name):
         """โหลดโน้ตจากไฟล์"""
@@ -520,6 +521,7 @@ class Gameplay:
         # กำหนดสถานะ paused และตัวแปร music_played
         self.paused = False
         music_played = False  # ตัวแปรเพื่อให้เพลงเล่นแค่ครั้งเดียว
+        play_time = False
 
         while True:
             current_time = time.time() - start_time
@@ -529,6 +531,7 @@ class Gameplay:
                 pygame.mixer.music.load(f'songs/SONG{self.song_index}.mp3')
                 pygame.mixer.music.play()
                 music_played = True  # ตั้งค่าให้ไม่เล่นเพลงซ้ำ
+                play_time = True
 
             # วาดพื้นหลังและ overlay ทุกเฟรม
             self.screen.blit(background_image, (0, 0))
@@ -573,5 +576,10 @@ class Gameplay:
             # อัปเดตการแสดงผล
             pygame.display.flip()
 
+            if not pygame.mixer.music.get_busy() and play_time:  # ตรวจสอบว่าเพลงเล่นเสร็จแล้ว
+                self.summary = Summary(self, self.song_index, self.score, self.perfect_hits, self.good_hits, self.bad_hits, self.missed_notes, self.combo, self.accuracy)
+                self.summary.show()
+
             # ควบคุมอัตราเฟรมให้คงที่ที่ 60 fps
             self.clock.tick(60)
+ 
