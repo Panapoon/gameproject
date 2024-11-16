@@ -78,7 +78,7 @@ class Options:
             self.reset_button.draw(self.screen, mouse_pos)  
 
             # ส่วนหัว
-            OPTION_surface = self.font.render("OPTION", True, config.BLACK)
+            OPTION_surface = self.font.render("OPTION", True, config.WHITE)
             OPTION_rect = OPTION_surface.get_rect(center=(self.WIDTH // 2, self.HEIGHT // 7))
             shadow_surface = self.font.render("OPTION", True, (0, 0, 0))  # สีดำสำหรับเงา
             shadow_rect = shadow_surface.get_rect(center=(self.WIDTH // 2 + 5, self.HEIGHT // 7 + 5))  # เงาจะอยู่ด้านล่างขวาเล็กน้อย
@@ -86,9 +86,13 @@ class Options:
             self.screen.blit(OPTION_surface, OPTION_rect)
 
             # Volume
-            volume_surface = self.font.render(f"Volume: {int(self.volume * 100)}%", True, config.BLACK)
+            volume_surface = self.font.render(f"Volume: {int(self.volume * 100)}%", True, config.WHITE)
             volume_rect = volume_surface.get_rect(center=(self.WIDTH // 2 , int(0.4 * self.HEIGHT)))
+            shadow_volume_surface = self.font.render(f"Volume: {int(self.volume * 100)}%", True, (0, 0, 0))
+            shadow_volume_rect = shadow_volume_surface.get_rect(center=(self.WIDTH // 2 + 5, int(0.4 * self.HEIGHT + 5)))
+            self.screen.blit(shadow_volume_surface, shadow_volume_rect)
             self.screen.blit(volume_surface, volume_rect)
+
 
             # Handle volume button clicks
             if self.volume_left_button.is_clicked(mouse_pos, mouse_click):

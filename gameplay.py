@@ -582,4 +582,3 @@ class Gameplay:
 
             # ควบคุมอัตราเฟรมให้คงที่ที่ 60 fps
             self.clock.tick(60)
- 
