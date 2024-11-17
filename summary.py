@@ -71,6 +71,10 @@ class Summary:
     def show(self):
         h = 0
         alpha = 0
+        high_score = config.get_high_score(self.song_index)
+
+        if self.score > high_score:
+            config.save_high_score(self.songLIST[self.song_index-1], self.score)
         while True:
             self.play_summary_music()
             for event in pygame.event.get():
@@ -127,15 +131,26 @@ class Summary:
             rect_surface.fill(config.BLACK)
 
             # แสดงสถิติที่ด้านซ้าย
-            stats_texts = [
-                f"Score: {self.score}",
-                f"Perfect: {self.perfect}",
-                f"Good: {self.good}",
-                f"Bad: {self.bad}",
-                f"Miss: {self.miss}",
-                f"Combo: {self.combo}",
-                f"Accuracy: {self.acc:.2f}%",
-            ]
+            if self.score > high_score:
+                stats_texts = [
+                    f"Score: {self.score} high score!!!",
+                    f"Perfect: {self.perfect}",
+                    f"Good: {self.good}",
+                    f"Bad: {self.bad}",
+                    f"Miss: {self.miss}",
+                    f"Combo: {self.combo}",
+                    f"Accuracy: {self.acc:.2f}%",
+                ]
+            else:
+                stats_texts = [
+                    f"Score: {self.score}",
+                    f"Perfect: {self.perfect}",
+                    f"Good: {self.good}",
+                    f"Bad: {self.bad}",
+                    f"Miss: {self.miss}",
+                    f"Combo: {self.combo}",
+                    f"Accuracy: {self.acc:.2f}%",
+                ]
 
             # วาดปุ่ม
             mouse_pos = pygame.mouse.get_pos()

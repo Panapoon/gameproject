@@ -157,7 +157,7 @@ class Gameplay:
         self.song_index = song_index
         self.select_song = SelectSong(self)
 
-        self.hit_sound = pygame.mixer.Sound("songs/Hit_Sound.mp3")
+        self.hit_sound = pygame.mixer.Sound("songs/sound_effect/hit_sound.mp3")
         self.hit_sound.set_volume(0.2)
         
         # สร้างชื่อเพลงจาก song_index
@@ -188,6 +188,7 @@ class Gameplay:
         self.long_notes = []
         self.score = 0 
         self.combo = 0  
+        self.high_combo = 0
         self.hit_notes = 0 
         self.missed_notes = 0  
         self.total_notes = 0  
@@ -245,6 +246,8 @@ class Gameplay:
         """ลงทะเบียนการตีโน้ต"""
         self.score += points  # เพิ่มคะแนนตามประเภทของการตี
         self.combo += 1  # เพิ่มคอมโบ
+        if self.combo > self.high_combo:
+            self.high_combo = self.combo
         self.hit_notes += 1  # เพิ่มจำนวนโน้ตที่ถูกตี
 
         self.hit_sound.play() # เล่นเสียงตอนกด
@@ -536,7 +539,7 @@ class Gameplay:
 
             # ตรวจสอบว่าเพลงเล่นเสร็จแล้ว
             if not pygame.mixer.music.get_busy() and play_time:  
-                self.summary = Summary(self, self.song_index, self.score, self.perfect_hits, self.good_hits, self.bad_hits, self.missed_notes, self.combo, self.accuracy)
+                self.summary = Summary(self, self.song_index, self.score, self.perfect_hits, self.good_hits, self.bad_hits, self.missed_notes, self.high_combo, self.accuracy)
                 result = self.summary.show()
                 return result
 

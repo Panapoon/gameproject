@@ -26,6 +26,34 @@ def play_song(song_name):
     pygame.mixer.music.load(song_path)
     pygame.mixer.music.play(-1)
 
+def save_high_score(song_name, score):
+    """บันทึกคะแนนสูงสุดของเพลงลงในไฟล์ .json"""
+    file_path = "high_scores.json"
+    
+    # ตรวจสอบว่ามีไฟล์อยู่หรือไม่
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+    else:
+        data = {}
+
+    # ถ้าไม่มีเพลงในไฟล์นี้ ให้เพิ่มเพลงพร้อมค่าเริ่มต้น
+    song_key = f"{song_name}"
+    if song_key not in data or score > data[song_key]:
+        data[song_key] = score
+        with open(file_path, 'w') as file:
+            json.dump(data, file, indent=4)
+
+def get_high_score(song_name):
+    """ดึงคะแนนสูงสุดจากไฟล์ .json ถ้ายังไม่มีให้คืนค่า 0"""
+    file_path = "high_scores.json"
+    
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+            return data.get(f"{song_name}", 0)
+    return 0
+
 # ฟังก์ชันสำหรับบันทึกการตั้งค่าลงในไฟล์
 def save_settings(settings):
     try:

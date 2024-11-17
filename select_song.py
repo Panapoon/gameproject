@@ -49,15 +49,9 @@ class SelectSong:
         if self.is_playing:
             pygame.mixer.music.stop()
 
-        # โหลดและเล่นเพลงที่เลือก
-        song_path = f"songs/SONG{self.current_song_index}.mp3"  # ปรับเส้นทางถ้าจำเป็น
-        try:
-            pygame.mixer.music.load(song_path)
-            pygame.mixer.music.play(-1)  # เล่นซ้ำไปเรื่อย ๆ
-            self.is_playing = True
-            print(f"Playing {self.songLIST[self.current_song_index - 1]}")
-        except pygame.error as e:
-            print(f"Error playing song {song_path}: {e}")
+        config.play_song(f"SONG{self.current_song_index}")
+        self.is_playing = True
+        print(f"Playing {self.songLIST[self.current_song_index - 1]}")
 
     def show(self):
         self.play_song()
@@ -99,6 +93,10 @@ class SelectSong:
             #สร้างปุ่มตรงกลาง
             self.songM_button.text = self.songLIST[self.current_song_index-1]
             self.songM_button.draw(self.screen, mouse_pos)
+
+            high_score_text = config.get_high_score(self.songLIST[self.current_song_index-1])
+            high_score_text = self.font.render(f"{high_score_text:05}", True, (255, 255, 255))
+            self.screen.blit(high_score_text, (900, 900))
 
             #สร้างปุ่มซ้ายและขวา
             if self.current_song_index > 1:
