@@ -45,6 +45,16 @@ class Summary:
             pygame.mixer.music.play(-1)
             self.music_played = True  # ตั้งค่าให้เพลงเริ่มแล้ว
 
+    def fade(self):
+        fade_surface = pygame.Surface((self.WIDTH, self.HEIGHT))
+        fade_surface.fill(config.BLACK)
+
+        for alpha in range(0, 256, 5):
+            fade_surface.set_alpha(alpha)
+            self.screen.blit(fade_surface, (0, 0))
+            pygame.display.flip()
+            pygame.time.delay(10)
+
     def calculate_rank(self):
         """ คำนวณแรงค์จากคะแนน """
         if self.acc >= 95:
@@ -70,7 +80,9 @@ class Summary:
                     pygame.quit()
                     sys.exit()
                 if self.restart_button.is_clicked(mouse_pos, mouse_click):
-                    return "gameplay", self.song_index
+                    pygame.mixer.music.stop()
+                    self.fade()
+                    return "gameplay"
                 elif self.select_song_button.is_clicked(mouse_pos, mouse_click):
                     return "select_song"
                 elif self.main_menu_button.is_clicked(mouse_pos, mouse_click):

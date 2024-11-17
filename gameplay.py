@@ -335,33 +335,9 @@ class Gameplay:
         self.screen.blit(combo_text, (10, 50))  # แสดงคอมโบที่มุมซ้ายบน
 
      
-
-    def show_restart_or_exit(self):
-        """แสดงตัวเลือกให้ผู้เล่นเลือกว่าจะเล่นใหม่หรือออก"""
-        font = pygame.font.Font(None, 36)
-        restart_text = font.render("Press 'R' to Restart, 'M' for Menu, 'Q' to Quit", True, config.WHITE)
-        self.screen.blit(restart_text, (self.WIDTH // 2 - restart_text.get_width() // 2, self.HEIGHT // 2 + 150))
-
-        pygame.display.flip()
-
-        waiting = True
-        while waiting:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    quit()
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_r:
-                        self.reset_game()  # รีเซ็ตเกมใหม่
-                        waiting = False
-                    elif event.key == pygame.K_m:
-                        self.show_menu()  # แสดงเมนูหลัก
-                        waiting = False
-                    elif event.key == pygame.K_q:
-                        pygame.quit()
-                        quit()
-
-    def reset_game(self):    
+    def reset_game(self): 
+        self.fade(fade_out=True)  # เริ่ม fade out
+        self.fade(fade_out=False)  # เริ่ม fade in          
         self.notes = []  # Clear the list of notes
         self.score = 0
         self.combo = 0
@@ -447,7 +423,8 @@ class Gameplay:
                         waiting = False
                     elif restart_button.rect.collidepoint(mouse_pos):  # Restart
                         waiting = False
-                        return "gameplay", self.song_index
+                        self.fade()   
+                        return "gameplay"
                     elif menu_button.rect.collidepoint(mouse_pos):  # To Menu
                         # Fade-out, then switch to the menu, then fade-in
                         waiting = False
@@ -526,21 +503,22 @@ class Gameplay:
             # การจัดการอีเวนต์
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                     running = False
+                    running = False
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:  # กด ESC เพื่อหยุดหรือเล่นเกม
                         self.toggle_pause()
-                        self.paused = True # สลับสถานะ paused
+                        self.paused = True
 
             # ถ้าเกมถูกหยุด (paused) จะแสดงเมนู Pause
-                if self.paused:
-                    result = self.display_pause_menu()
-                    if result == "resume":
-                        self.paused = False
-                        continue
-                    else:
-                        return result
-            
+            if self.paused:
+                result = self.display_pause_menu()
+                if result == "resume":
+                    self.paused = False  # ตั้งค่า self.paused เป็น False เพื่อให้เกมทำงานต่อ
+                elif result == "gameplay":
+                    return "gameplay"  # Restart หรือดำเนินการอื่นๆ ที่จำเป็น
+                elif result == "select_song":
+                    return "select_song"  # ไปยังหน้าเลือกเพลง
+
             # ถ้าเกมไม่ได้หยุด (ไม่ได้อยู่ในสถานะ paused) ให้ทำการอัปเดตสถานะต่างๆ
             if not self.paused:
                 keys = pygame.key.get_pressed()
@@ -556,7 +534,8 @@ class Gameplay:
             # อัปเดตการแสดงผล
             pygame.display.flip()
 
-            if not pygame.mixer.music.get_busy() and play_time:  # ตรวจสอบว่าเพลงเล่นเสร็จแล้ว
+            # ตรวจสอบว่าเพลงเล่นเสร็จแล้ว
+            if not pygame.mixer.music.get_busy() and play_time:  
                 self.summary = Summary(self, self.song_index, self.score, self.perfect_hits, self.good_hits, self.bad_hits, self.missed_notes, self.combo, self.accuracy)
                 result = self.summary.show()
                 return result
