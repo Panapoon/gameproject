@@ -27,25 +27,15 @@ class sec_Game:
         self.option = Options(self)
         self.gameplay = None
         
-    def fade(self, fade_out=True, delay=500):
+    def fade(self):
         fade_surface = pygame.Surface((self.WIDTH, self.HEIGHT))
         fade_surface.fill(config.BLACK)
 
-        if fade_out:  # เฟดไปสีดำ
-            for alpha in range(0, 256, 5):
-                fade_surface.set_alpha(alpha)
-                self.screen.blit(fade_surface, (0, 0))
-                pygame.display.flip()
-                pygame.time.delay(10)
-
-            pygame.time.delay(delay)  # ค้างอยู่ในหน้าจอสีดำ
-            
-        else:  # เฟดกลับจากสีดำ
-            for alpha in range(255, 0, -5):
-                fade_surface.set_alpha(alpha)
-                self.screen.blit(fade_surface, (0, 0))
-                pygame.display.flip()
-                pygame.time.delay(10)
+        for alpha in range(0, 256, 5):
+            fade_surface.set_alpha(alpha)
+            self.screen.blit(fade_surface, (0, 0))
+            pygame.display.flip()
+            pygame.time.delay(10)
 
 # เริ่มต้นเกม
 game_instance = sec_Game()
@@ -61,19 +51,14 @@ while True:
     elif screen == 'gameplay':
         game_instance.gameplay = Gameplay(game_instance, game_instance.current_song_index)  # ส่ง current_song_index
         next_screen = game_instance.gameplay.show()
-    elif screen == 'summary':
-        next_screen = game_instance.summary.show()
     elif screen == 'option':
         next_screen = game_instance.option.show()
     else:
         pygame.quit()
         sys.exit()
 
-    if next_screen and next_screen != screen:
+    if next_screen != screen:
         pygame.mixer.music.stop()
-        game_instance.fade(fade_out=True)  # เฟดไปสีดำ
-        screen = next_screen  # เปลี่ยนหน้าจอ
-        next_screen = None  # รีเซ็ตตัวแปรหน้าจอถัดไป
-        game_instance.fade(fade_out=False)  # เฟดกลับจากสีดำ
-    else:
-        game_instance.fade(fade_out=False)
+        game_instance.fade()  
+        screen = next_screen 
+        next_screen = None  

@@ -58,27 +58,23 @@ class Summary:
         else:
             return "D"
 
-    def handle_events(self, event):
-        """ จัดการเหตุการณ์คลิกปุ่ม """
-        mouse_click = pygame.mouse.get_pressed()
-        mouse_pos = pygame.mouse.get_pos()
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-        if self.restart_button.is_clicked(mouse_pos, mouse_click):
-            pass
-        elif self.select_song_button.is_clicked(mouse_pos, mouse_click):
-            pass
-        elif self.main_menu_button.is_clicked(mouse_pos, mouse_click):
-            pass
-
     def show(self):
         h = 0
         alpha = 0
         while True:
             self.play_summary_music()
             for event in pygame.event.get():
-                self.handle_events(event)
+                mouse_click = pygame.mouse.get_pressed()
+                mouse_pos = pygame.mouse.get_pos()
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if self.restart_button.is_clicked(mouse_pos, mouse_click):
+                    return "gameplay", self.song_index
+                elif self.select_song_button.is_clicked(mouse_pos, mouse_click):
+                    return "select_song"
+                elif self.main_menu_button.is_clicked(mouse_pos, mouse_click):
+                    return "title"
 
             self.screen.fill((0, 0, 0))
 
@@ -168,86 +164,3 @@ class Summary:
                 
                 pygame.display.flip()
                 pygame.time.delay(5)
-
-        
-        """def show(self):
-            h = 0
-            alpha = 0
-            start_ticks = pygame.time.get_ticks()  # เริ่มจับเวลา
-            fade_duration = 2000  # ระยะเวลาในการทำ fade 2 วินาที
-            overlay_duration = 3000  # ระยะเวลาในการขยาย overlay 3 วินาที
-
-            while True:
-                self.play_summary_music()
-                for event in pygame.event.get():
-                    self.handle_events(event)
-
-                # วาดภาพพื้นหลัง
-                background_image = pygame.image.load(f'picture/BACKGROUND/BG{self.song_index}.png')
-                background_image = pygame.transform.scale(background_image, (self.WIDTH, self.HEIGHT))
-                self.screen.blit(background_image, (0, 0))
-
-                overlay = pygame.Surface((self.WIDTH, self.HEIGHT))
-                overlay.set_alpha(128)
-                overlay.fill((0, 0, 0))
-                self.screen.blit(overlay, (0, 0))
-
-                elapsed_time = pygame.time.get_ticks() - start_ticks  # เวลาที่ผ่านไป
-
-                # ขยาย overlay (head_overlay, tail_overlay)
-                if elapsed_time <= overlay_duration:
-                    h = int((elapsed_time / overlay_duration) * 150)  # ขยายตามเวลา
-                head_overlay = pygame.Surface((self.WIDTH, h))
-                head_overlay.set_alpha(128)
-                head_overlay.fill((0, 0, 0))
-                self.screen.blit(head_overlay, (0, 0))
-
-                tail_overlay = pygame.Surface((self.WIDTH, h))
-                tail_overlay.set_alpha(128)
-                tail_overlay.fill((0, 0, 0))
-                self.screen.blit(tail_overlay, (0, self.HEIGHT - h))
-
-                if elapsed_time >= overlay_duration:
-                    # เฟดข้อความหลังจาก overlay ขยายเสร็จ
-                    if alpha < 128:
-                        alpha = int((elapsed_time - overlay_duration) / fade_duration * 128)
-                
-                # แสดงข้อมูล
-                stats_texts = [
-                    f"Score: {self.score}",
-                    f"Perfect: {self.perfect}",
-                    f"Good: {self.good}",
-                    f"Bad: {self.bad}",
-                    f"Miss: {self.miss}",
-                    f"Combo: {self.combo}",
-                    f"Accuracy: {self.acc:.2f}%",
-                ]
-
-                stats_texts_faded = []
-                for text in stats_texts:
-                    faded_text = self.font.render(text, True, (255, 255, 255))
-                    faded_text.set_alpha(alpha)
-                    stats_texts_faded.append(faded_text)
-
-                # คำนวณและแสดงอันดับ
-                rank = self.calculate_rank()
-                rank_text = self.font_rank.render(rank, True, (255, 255, 0))  # สีเหลือง
-                rank_rect = rank_text.get_rect(center=(self.screen.get_width() - 300, self.screen.get_height() // 2))
-                
-                # ตรวจสอบให้แน่ใจว่า rank_rect ถูกกำหนดค่าแล้วก่อนที่จะใช้ set_alpha
-                rank_text.set_alpha(alpha)
-                self.screen.blit(rank_text, rank_rect)
-
-                # วาดข้อความ
-                for i, text in enumerate(stats_texts_faded):
-                    self.screen.blit(text, (200, 225 + i * 90))
-
-                # วาดปุ่ม
-                mouse_pos = pygame.mouse.get_pos()
-                self.restart_button.draw(self.screen, mouse_pos)
-                self.select_song_button.draw(self.screen, mouse_pos)
-                self.main_menu_button.draw(self.screen, mouse_pos)
-
-                pygame.display.flip()
-                """
-

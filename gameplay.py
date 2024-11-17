@@ -361,9 +361,7 @@ class Gameplay:
                         pygame.quit()
                         quit()
 
-    def reset_game(self):
-        self.fade(fade_out=True)  # เริ่ม fade out
-        self.fade(fade_out=False)  # เริ่ม fade in       
+    def reset_game(self):    
         self.notes = []  # Clear the list of notes
         self.score = 0
         self.combo = 0
@@ -448,12 +446,12 @@ class Gameplay:
                         self.toggle_pause()
                         waiting = False
                     elif restart_button.rect.collidepoint(mouse_pos):  # Restart
-                        self.reset_game()
                         waiting = False
+                        return "gameplay", self.song_index
                     elif menu_button.rect.collidepoint(mouse_pos):  # To Menu
                         # Fade-out, then switch to the menu, then fade-in
-                        self.fade(fade_out=True) 
-                        waiting = False  
+                        waiting = False
+                        self.fade()  
                         return "select_song"
 
                         
@@ -477,27 +475,15 @@ class Gameplay:
             pygame.display.flip()
 
 
-    def fade(self, fade_out=True, speed=5):
-        """สร้างเอฟเฟกต์ Fade (เข้าหรือออก)"""
+    def fade(self):
         fade_surface = pygame.Surface((self.WIDTH, self.HEIGHT))
-        fade_surface.fill((0, 0, 0))  # เติมสีดำ
-        alpha = 0 if fade_out else 255  # ตั้งค่า alpha เริ่มต้น
+        fade_surface.fill(config.BLACK)
 
-        # กำหนดให้สีมีความทึบ (alpha) ตั้งแต่ 0 (โปร่งใส) ถึง 255 (ทึบสุด)
-        if fade_out:
-            while alpha < 255:
-                alpha += speed
-                fade_surface.set_alpha(alpha)
-                self.screen.blit(fade_surface, (0, 0))
-                pygame.display.flip()
-                self.clock.tick(60)
-        else:
-            while alpha > 0:
-                alpha -= speed
-                fade_surface.set_alpha(alpha)
-                self.screen.blit(fade_surface, (0, 0))
-                pygame.display.flip()
-                self.clock.tick(60)
+        for alpha in range(0, 256, 5):
+            fade_surface.set_alpha(alpha)
+            self.screen.blit(fade_surface, (0, 0))
+            pygame.display.flip()
+            pygame.time.delay(10)
     
 
     def show(self):
@@ -549,17 +535,11 @@ class Gameplay:
             # ถ้าเกมถูกหยุด (paused) จะแสดงเมนู Pause
                 if self.paused:
                     result = self.display_pause_menu()
-                    if result == "select_song":
-                        song_result, song_index = self.game.select_song.show()
-                        if song_result == "gameplay":
-                            self.song_index = song_index  # เลือกเพลงใหม่
-                            self.paused = False  # ปิดสถานะ paused
-                            return "select_song"  # ส่งผลให้กลับไปที่หน้าเลือกเพลง
-                        elif song_result == "title":
-                            return "title"
-                    elif result == "resume":
+                    if result == "resume":
                         self.paused = False
-                        continue  # กลับไปเล่นเกม
+                        continue
+                    else:
+                        return result
             
             # ถ้าเกมไม่ได้หยุด (ไม่ได้อยู่ในสถานะ paused) ให้ทำการอัปเดตสถานะต่างๆ
             if not self.paused:
@@ -578,7 +558,8 @@ class Gameplay:
 
             if not pygame.mixer.music.get_busy() and play_time:  # ตรวจสอบว่าเพลงเล่นเสร็จแล้ว
                 self.summary = Summary(self, self.song_index, self.score, self.perfect_hits, self.good_hits, self.bad_hits, self.missed_notes, self.combo, self.accuracy)
-                self.summary.show()
+                result = self.summary.show()
+                return result
 
             # ควบคุมอัตราเฟรมให้คงที่ที่ 60 fps
             self.clock.tick(60)
