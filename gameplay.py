@@ -8,7 +8,7 @@ import SongNoteGen
 from summary import *
 
 class Note:
-    def __init__(self, screen, lane, spawn_time, hit_lane_y, note_speed=300):
+    def __init__(self, screen, lane, spawn_time, hit_lane_y):
         self.WIDTH, self.HEIGHT = 1920, 1080
         self.screen = screen
         self.lane = lane
@@ -16,7 +16,7 @@ class Note:
         self.spawn_time = spawn_time
         self.hit_lane_y = hit_lane_y  # รับค่า hit_lane_y จากภายนอก
         self.hit = False
-        self.note_speed = note_speed*300 # รับ note_speed จากภายนอก
+        self.note_speed = 300 # รับ note_speed จากภายนอก
         self.note_color = (0, 255, 0)
         self.lane_width = self.WIDTH / 8
         self.hit_line_y = self.HEIGHT - 150  # จุดที่จะตีโน้ต
@@ -61,7 +61,7 @@ class Note:
         return False
 
 class Long_Note:
-    def __init__(self, screen, lane, spawn_time, duration,  hit_lane_y, note_speed=300):
+    def __init__(self, screen, lane, spawn_time, duration,  hit_lane_y):
         self.WIDTH, self.HEIGHT = 1920, 1080
         self.screen = screen
         self.lane = lane
@@ -70,7 +70,7 @@ class Long_Note:
         self.hit_lane_y = hit_lane_y  # รับค่า hit_lane_y จากภายนอก
         self.duration = duration
         self.hit = False
-        self.note_speed = note_speed * 300 # รับ note_speed จากภายนอก
+        self.note_speed = 300 # รับ note_speed จากภายนอก
         self.note_color = (0, 255, 0)
         self.lane_width = self.WIDTH / 8
         self.hit_line_y = self.HEIGHT - 150  # จุดที่จะตีโน้ต
@@ -211,10 +211,10 @@ class Gameplay:
                 lane = int(parts[0])  # เลนที่โน้ตจะไป
                 spawn_time = float(parts[1]) # เวลาที่โน้ตจะปรากฏ
                 if len(parts) == 2:
-                    self.notes.append(Note(self.screen, lane, spawn_time, self.hit_line_y, note_speed=self.note_speed)) 
+                    self.notes.append(Note(self.screen, lane, spawn_time, self.hit_line_y)) 
                 elif len(parts) == 3:
                     duration = float(parts[2])
-                    self.long_notes.append(Long_Note(self.screen, lane, spawn_time, duration, self.hit_line_y, note_speed=self.note_speed))  
+                    self.long_notes.append(Long_Note(self.screen, lane, spawn_time, duration, self.hit_line_y))  
                 else:
                     print("Error load_notes")
                 self.total_notes += 1

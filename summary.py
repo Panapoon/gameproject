@@ -130,19 +130,8 @@ class Summary:
             rect_surface.set_alpha(200)
             rect_surface.fill(config.BLACK)
 
-            # แสดงสถิติที่ด้านซ้าย
-            if self.score > high_score:
-                stats_texts = [
-                    f"Score: {self.score} high score!!!",
-                    f"Perfect: {self.perfect}",
-                    f"Good: {self.good}",
-                    f"Bad: {self.bad}",
-                    f"Miss: {self.miss}",
-                    f"Combo: {self.combo}",
-                    f"Accuracy: {self.acc:.2f}%",
-                ]
-            else:
-                stats_texts = [
+    
+            stats_texts = [
                     f"Score: {self.score}",
                     f"Perfect: {self.perfect}",
                     f"Good: {self.good}",
