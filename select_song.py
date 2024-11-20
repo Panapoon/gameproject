@@ -11,7 +11,6 @@ import sys
 from option import *
 from title_screen import *
 import config
-#from gameplay import *
 
 class SelectSong:
     def __init__(self, game):

@@ -134,25 +134,13 @@ class Options:
             # ตรวจสอบการคลิกปุ่ม Apply
             if self.apply_button.is_clicked(mouse_pos, mouse_click):
                 self.apply_settings()  # บันทึกการตั้งค่าทั้งหมด
-                break
+                self.fade()
+                return "option"
 
             # ตรวจสอบการคลิกปุ่ม Back
             if self.back_button1.is_clicked(mouse_pos, mouse_click):
                 return "title"  # คืนค่าไปที่หน้าหลัก
-
-            pygame.display.flip()
-
-           
-
-            # ตรวจสอบการคลิกปุ่ม Apply
-            if self.apply_button.is_clicked(mouse_pos, mouse_click):
-                self.apply_settings()  # บันทึกการตั้งค่าทั้งหมด
-                break
-
-            # ตรวจสอบการคลิกปุ่ม Back
-            if self.back_button1.is_clicked(mouse_pos, mouse_click):
-                return "title"  # คืนค่าไปที่หน้าหลัก
-
+            
             # ตรวจสอบการคลิกปุ่ม Key Blind
             if self.key_blind_button.is_clicked(mouse_pos, mouse_click):
                 self.key_blind_screen()  # เปิดหน้าต่างปรับ Key Blind
@@ -263,3 +251,13 @@ class Options:
         # อัพเดตการตั้งค่าในไฟล์
         self.apply_settings()
         print("Settings have been reset to default.")
+
+    def fade(self):
+        fade_surface = pygame.Surface((self.WIDTH, self.HEIGHT))
+        fade_surface.fill(config.BLACK)
+
+        for alpha in range(0, 256, 5):
+            fade_surface.set_alpha(alpha)
+            self.screen.blit(fade_surface, (0, 0))
+            pygame.display.flip()
+            pygame.time.delay(10)

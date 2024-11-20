@@ -16,7 +16,7 @@ class Note:
         self.spawn_time = spawn_time
         self.hit_lane_y = hit_lane_y  # รับค่า hit_lane_y จากภายนอก
         self.hit = False
-        self.note_speed = 300 # รับ note_speed จากภายนอก
+        self.note_speed = 300 
         self.note_color = config.GREEN
         self.lane_width = self.WIDTH / 8
         self.hit_line_y = self.HEIGHT - 150  # จุดที่จะตีโน้ต
