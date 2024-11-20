@@ -45,10 +45,10 @@ class Options:
         settings = config.load_settings()
         self.volume = settings.get("volume", 1.0)
         self.key_bindings = settings.get("key_bindings", {
-            "D": pygame.K_d,
-            "F": pygame.K_f,
-            "K": pygame.K_k,
-            "L": pygame.K_l
+            "LANE 1": pygame.K_d,
+            "LANE 2": pygame.K_f,
+            "LANE 3": pygame.K_k,
+            "LANE 4": pygame.K_l
         })
         self.current_resolution = settings.get("screen_size", "1920x1080")  # ค่าเริ่มต้นเป็น 1920x1080
 
@@ -134,8 +134,6 @@ class Options:
             # ตรวจสอบการคลิกปุ่ม Apply
             if self.apply_button.is_clicked(mouse_pos, mouse_click):
                 self.apply_settings()  # บันทึกการตั้งค่าทั้งหมด
-                self.fade()
-                return "option"
 
             # ตรวจสอบการคลิกปุ่ม Back
             if self.back_button1.is_clicked(mouse_pos, mouse_click):
