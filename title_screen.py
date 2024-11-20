@@ -55,15 +55,6 @@ class TitleScreen:
             title_surface = self.font.render("Best Rhythm Game", True, (255, 20, 147))  # สีชมพู
             title_rect = title_surface.get_rect(center=(self.WIDTH // 2, self.HEIGHT // 4))
 
-            # จำลองเอฟเฟกต์ฟุ้ง โดยการวาดข้อความซ้ำหลายๆ ครั้งในตำแหน่งที่เบี่ยงเบน
-            for dx in range(-5, 6, 2):  # เคลื่อนที่ตำแหน่งเล็กน้อย
-                for dy in range(-5, 6, 2):  # เคลื่อนที่ตำแหน่งเล็กน้อย
-                    shadow_surface = title_surface.copy()
-                    shadow_rect = title_rect.move(dx, dy)
-                    shadow_surface.set_alpha(100)  # ความโปร่งแสงต่ำเพื่อสร้างเอฟเฟกต์เบลอ
-                    self.screen.blit(shadow_surface, shadow_rect)
-
-            # วาดข้อความหลัก
             self.screen.blit(title_surface, title_rect)
 
             # ตรวจสอบการคลิกปุ่ม

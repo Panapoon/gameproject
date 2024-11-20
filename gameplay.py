@@ -17,7 +17,7 @@ class Note:
         self.hit_lane_y = hit_lane_y  # รับค่า hit_lane_y จากภายนอก
         self.hit = False
         self.note_speed = 300 # รับ note_speed จากภายนอก
-        self.note_color = (0, 255, 0)
+        self.note_color = config.GREEN
         self.lane_width = self.WIDTH / 8
         self.hit_line_y = self.HEIGHT - 150  # จุดที่จะตีโน้ต
         self.note_height_offset = 0
@@ -65,7 +65,6 @@ class Long_Note:
         self.WIDTH, self.HEIGHT = 1920, 1080
         self.screen = screen
         self.lane = lane
-        self.screen = screen
         self.spawn_time = spawn_time
         self.hit_lane_y = hit_lane_y  # รับค่า hit_lane_y จากภายนอก
         self.duration = duration
@@ -195,7 +194,6 @@ class Gameplay:
         self.accuracy = 100.0  
         self.message = ""  
         self.message_display_time = 0 
-        self.message_duration = 1.5  
         self.running = True  
         self.start_time = time.time() 
         self.paused = False  
@@ -310,7 +308,7 @@ class Gameplay:
                 self.register_miss(long_note)  # ลงทะเบียนการพลาด
 
     def display_message(self):
-        if self.message and (time.time() - self.message_display_time) < self.message_duration:
+        if self.message and (time.time() - self.message_display_time) < 1.5:
             font = pygame.font.Font(None, 72)
             
             # ตั้งสีข้อความ
@@ -339,9 +337,8 @@ class Gameplay:
 
      
     def reset_game(self): 
-        self.fade(fade_out=True)  # เริ่ม fade out
-        self.fade(fade_out=False)  # เริ่ม fade in          
-        self.notes = []  # Clear the list of notes
+        self.fade()    
+        self.notes = []
         self.score = 0
         self.combo = 0
         self.hit_notes = 0
@@ -350,8 +347,8 @@ class Gameplay:
         self.accuracy = 100.0
         self.message = ""
         self.message_display_time = 0
-        self.start_time = time.time()  # Reset the game timer
-        self.paused = False  # Unpause if game was paused
+        self.start_time = time.time()  
+        self.paused = False 
         self.perfect_hits = 0
         self.good_hits = 0
         self.bad_hits = 0
@@ -362,21 +359,11 @@ class Gameplay:
     def toggle_pause(self):
         """ฟังก์ชั่นที่ใช้สำหรับการหยุดหรือเล่นเพลงเมื่อเกมหยุดชั่วคราว"""
         if self.paused:
-            pygame.mixer.music.unpause()  # ถ้าเกมกลับมาเล่นก็ให้เพลงเล่นต่อ
+            pygame.mixer.music.unpause()  
             self.paused = False
         else:
-            pygame.mixer.music.pause()  # ถ้าเกมหยุดก็ให้เพลงหยุด
+            pygame.mixer.music.pause()  
             self.paused = True
-    
-    
-     
-    def update_button_colors(self, buttons, mouse_pos):
-        """อัพเดตสีของปุ่มเมื่อเมาส์เคลื่อนที่เข้าไป"""
-        for button in buttons:
-            if button.rect.collidepoint(mouse_pos):
-                button.color = (200, 200, 255)  # Highlight color when hovered
-            else:
-                button.color = config.WHITE  # Default color
 
     def display_pause_menu(self):
         """แสดงเมนู pause ขณะที่เกมหยุดชั่วคราว"""

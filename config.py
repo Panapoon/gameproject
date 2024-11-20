@@ -100,7 +100,7 @@ with open(song, 'r', encoding='utf-8') as file:
     songLIST = [line.strip() for line in file]
 
 class Button:
-    def __init__(self, text, text_size, x, y, width, height, color, alpha=255, image_path=None, corner_radius=20):
+    def __init__(self, text, text_size, x, y, width, height, color, alpha=255, corner_radius=20):
         self.text = text
         self.text_size = text_size
         self.x, self.y = x, y
@@ -108,36 +108,10 @@ class Button:
         self.color = color
         self.alpha = alpha
         self.corner_radius = corner_radius
-        self.button_image = None
         self.font = pygame.font.Font(FONT1, text_size)  # ใช้ฟอนต์ที่กำหนด
-
-        if image_path:
-            self.load_image(image_path)
 
         self.rect = pygame.Rect(0, 0, self.width, self.height)
         self.rect.center = (self.x, self.y)
-
-    def load_image(self, image_path):
-        """ โหลดรูปภาพปุ่มจากไฟล์ """
-        self.button_image = self.try_load_image(image_path)
-        if not self.button_image:
-            for i in range(5):
-                self.button_image = self.try_load_image(f"Button{i+1}.png")
-                if self.button_image:
-                    break
-        if not self.button_image:
-            self.button_image = self.try_load_image("Button_default.png")
-
-    def try_load_image(self, image_name):
-        """ ช่วยโหลดภาพและคืนค่าภาพหรือ None ถ้าโหลดไม่ได้ """
-        image_path = os.path.join("picture", image_name)
-        if os.path.exists(image_path):
-            try:
-                image = pygame.image.load(image_path).convert_alpha()
-                return image
-            except pygame.error:
-                print(f"Error loading image: {image_path}")
-        return None
 
     def _adjust_color(self, color, amount):
         """ ปรับสีเมื่อเมาส์ชี้ """
@@ -170,27 +144,14 @@ class Button:
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.rect.center = (self.x, self.y)
 
-        if self.button_image:
-            if self.button_image.get_size() != (self.rect.width, self.rect.height):
-                self.button_image = pygame.transform.scale(self.button_image, (self.rect.width, self.rect.height))
-            if self.rect.collidepoint(mouse_pos):
-                overlay = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
-                overlay.fill((0, 0, 0, 50))  # เพิ่มความมืดเมื่อเมาส์ชี้ไปที่ปุ่ม
-                image_surface = self.button_image.copy()
-                image_surface.blit(overlay, (0, 0))
-            else:
-                image_surface = self.button_image
-
-            screen.blit(image_surface, self.rect.topleft)
+        button_surface = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
+        if self.rect.collidepoint(mouse_pos):
+            use_color = self._adjust_color(self.color, -50)  # ทำให้สีเข้มขึ้นเมื่อเมาส์ชี้
         else:
-            button_surface = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
-            if self.rect.collidepoint(mouse_pos):
-                use_color = self._adjust_color(self.color, -50)  # ทำให้สีเข้มขึ้นเมื่อเมาส์ชี้
-            else:
-                use_color = self.color
+            use_color = self.color
 
-            self.draw_rounded_rect(button_surface, use_color + (self.alpha,), (self.rect.width, self.rect.height), self.corner_radius)
-            screen.blit(button_surface, self.rect.topleft)
+        self.draw_rounded_rect(button_surface, use_color + (self.alpha,), (self.rect.width, self.rect.height), self.corner_radius)
+        screen.blit(button_surface, self.rect.topleft)
 
         # วาดข้อความบนปุ่ม
         wrapped_text = self.wrap_text(self.text, self.font, self.rect.width - 10)
