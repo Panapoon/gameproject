@@ -240,10 +240,10 @@ class Options:
         # รีเซ็ตการตั้งค่าเป็นค่าดีฟอลต์
         self.volume = 1.0
         self.key_bindings = {
-            "LANE 1": pygame.K_d,
-            "LANE 2": pygame.K_f,
-            "LANE 3": pygame.K_k,
-            "LANE 4": pygame.K_l
+            "D": pygame.K_d,
+            "F": pygame.K_f,
+            "K": pygame.K_k,
+            "L": pygame.K_l
         }
 
         # อัพเดตการตั้งค่าในไฟล์

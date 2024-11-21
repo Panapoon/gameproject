@@ -157,7 +157,7 @@ class Gameplay:
         self.select_song = SelectSong(self)
 
         self.hit_sound = pygame.mixer.Sound("songs/sound_effect/hit_sound.mp3")
-        self.hit_sound.set_volume(0.2)
+        self.hit_sound.set_volume(0.1)
         
         # สร้างชื่อเพลงจาก song_index
         self.song_name = f"SONG{self.song_index + 1}"  # เพิ่ม 1 เพราะ index เริ่มจาก 0

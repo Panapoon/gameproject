@@ -38,7 +38,7 @@ class sec_Game:
             pygame.time.delay(10)
 
 # เริ่มต้นเกม
-game_instance = sec_Game()
+game_instance = sec_Game()  
 screen = 'title'
 next_screen = None 
 while True:

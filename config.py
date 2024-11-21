@@ -75,10 +75,10 @@ def load_settings():
         return {
             "volume": 1.0,
             "key_bindings": {
-                "LANE 1": pygame.K_d,
-                "LANE 2": pygame.K_f,
-                "LANE 3": pygame.K_k,
-                "LANE 4": pygame.K_l
+                "D": pygame.K_d,
+                "F": pygame.K_f,
+                "K": pygame.K_k,
+                "L": pygame.K_l
             }
         }
     except Exception as e:
@@ -86,10 +86,10 @@ def load_settings():
         return {
             "volume": 1.0,
             "key_bindings": {
-                "LANE 1": pygame.K_d,
-                "LANE 2": pygame.K_f,
-                "LANE 3": pygame.K_k,
-                "LANE 4": pygame.K_l
+                "D": pygame.K_d,
+                "F": pygame.K_f,
+                "K": pygame.K_k,
+                "L": pygame.K_l
             }
         }
 
